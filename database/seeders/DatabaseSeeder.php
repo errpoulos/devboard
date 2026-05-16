@@ -2,7 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Board;
+use App\Models\BoardColumn;
+use App\Models\Task;
 use App\Models\User;
+use App\Models\Workspace;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -10,16 +14,47 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $admin = User::factory()->create([
+            'name' => 'Admin User',
+            'email' => 'admin@devboard.test',
         ]);
+
+        $members = User::factory(4)->create();
+
+        $workspace = Workspace::create([
+            'name' => 'Dev Team',
+            'slug' => 'dev-team',
+            'owner_id' => $admin->id,
+        ]);
+
+        $workspace->members()->attach($admin->id, ['role' => 'owner']);
+        foreach ($members as $member) {
+            $workspace->members()->attach($member->id, ['role' => 'member']);
+        }
+
+        $board = Board::create([
+            'workspace_id' => $workspace->id,
+            'name' => 'Sprint 1',
+            'description' => 'First sprint board',
+        ]);
+
+        $columns = collect([
+            ['name' => 'To Do', 'color' => '#6b7280', 'position' => 0],
+            ['name' => 'In Progress', 'color' => '#3b82f6', 'position' => 1],
+            ['name' => 'Review', 'color' => '#f59e0b', 'position' => 2],
+            ['name' => 'Done', 'color' => '#22c55e', 'position' => 3],
+        ])->map(fn ($col) => $board->columns()->create($col));
+
+        $allUsers = $members->push($admin);
+
+        foreach ($columns as $column) {
+            Task::factory(5)->create([
+                'workspace_id' => $workspace->id,
+                'board_column_id' => $column->id,
+                'assignee_id' => $allUsers->random()->id,
+            ]);
+        }
     }
 }

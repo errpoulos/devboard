@@ -21,7 +21,6 @@ return new class extends Migration
             $table->foreign('workspace_id')->references('id')->on('workspaces')->cascadeOnDelete();
 
             $table->index(['workspace_id', 'created_at']);
-            $table->index(['subject_type', 'subject_id']);
         });
     }
 
