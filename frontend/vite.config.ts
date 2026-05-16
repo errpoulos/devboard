@@ -13,9 +13,9 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     proxy: {
-      '/api': 'http://app',
-      '/sanctum': 'http://app',
-      '/broadcasting': 'http://app',
+      '/api': 'http://app:80',
+      '/sanctum': 'http://app:80',
+      '/broadcasting': 'http://app:80',
     },
   },
   test: {
