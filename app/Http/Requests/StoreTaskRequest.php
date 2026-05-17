@@ -16,6 +16,7 @@ class StoreTaskRequest extends FormRequest
             'board_column_id' => ['required', 'integer', 'exists:board_columns,id'],
             'priority' => ['nullable', Rule::in(['low', 'medium', 'high', 'urgent'])],
             'due_at' => ['nullable', 'date'],
+            'story_points' => ['nullable', 'integer', 'min:0', 'max:999'],
         ];
     }
 }

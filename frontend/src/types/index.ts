@@ -39,6 +39,7 @@ export interface Task {
   title: string
   description: string | null
   priority: 'low' | 'medium' | 'high' | 'urgent'
+  story_points?: number | null
   position: number
   due_at: string | null
   completed_at: string | null

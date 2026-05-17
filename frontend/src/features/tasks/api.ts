@@ -4,10 +4,11 @@ import type { ApiResource, Comment, Task } from '@/types'
 type CreateTaskPayload = {
   title: string
   board_column_id: number
-  description?: string
+  description?: string | null
   assignee_id?: number
   priority?: string
-  due_at?: string
+  due_at?: string | null
+  story_points?: number | null
 }
 
 type UpdateTaskPayload = Partial<CreateTaskPayload & { completed_at: string | null }>

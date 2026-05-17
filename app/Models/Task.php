@@ -23,6 +23,7 @@ class Task extends Model
         'position',
         'due_at',
         'completed_at',
+        'story_points',
     ];
 
     protected function casts(): array

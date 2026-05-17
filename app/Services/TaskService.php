@@ -27,6 +27,7 @@ class TaskService
             'priority' => $data->priority,
             'position' => $position,
             'due_at' => $data->dueAt,
+            'story_points' => $data->storyPoints,
         ]);
 
         event(new TaskCreated($task, $actor));
@@ -36,30 +37,29 @@ class TaskService
 
     public function update(Task $task, UpdateTaskDTO $data, User $actor): Task
     {
-        $changes = [];
-
         if ($data->boardColumnId && $data->boardColumnId !== $task->board_column_id) {
             $fromColumn = $task->board_column_id;
             $task->update(['board_column_id' => $data->boardColumnId]);
             event(new TaskMoved($task, $actor, $fromColumn, $data->boardColumnId));
         }
 
-        $updateData = array_filter([
+        // Build update data from only the keys explicitly sent in the request,
+        // so null values clear a field rather than being silently ignored.
+        $fieldMap = [
             'title' => $data->title,
             'description' => $data->description,
             'assignee_id' => $data->assigneeId,
             'priority' => $data->priority,
             'due_at' => $data->dueAt,
             'completed_at' => $data->completedAt,
-        ], fn ($v) => ! is_null($v));
+            'story_points' => $data->storyPoints,
+        ];
+
+        $updateData = array_intersect_key($fieldMap, array_flip($data->keys));
 
         if (! empty($updateData)) {
-            $changes = array_keys($updateData);
             $task->update($updateData);
-        }
-
-        if (! empty($changes)) {
-            event(new TaskUpdated($task, $actor, $changes));
+            event(new TaskUpdated($task, $actor, array_keys($updateData)));
         }
 
         return $task->fresh(['assignee', 'column']);

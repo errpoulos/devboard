@@ -17,6 +17,7 @@ class UpdateTaskRequest extends FormRequest
             'priority' => ['sometimes', Rule::in(['low', 'medium', 'high', 'urgent'])],
             'due_at' => ['nullable', 'date'],
             'completed_at' => ['nullable', 'date'],
+            'story_points' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:999'],
         ];
     }
 }

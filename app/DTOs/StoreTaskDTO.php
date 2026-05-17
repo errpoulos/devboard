@@ -13,6 +13,7 @@ readonly class StoreTaskDTO
         public int $boardColumnId,
         public string $priority,
         public ?string $dueAt,
+        public ?int $storyPoints,
     ) {}
 
     public static function fromRequest(StoreTaskRequest $request): self
@@ -24,6 +25,7 @@ readonly class StoreTaskDTO
             boardColumnId: $request->validated('board_column_id'),
             priority: $request->validated('priority', 'medium'),
             dueAt: $request->validated('due_at'),
+            storyPoints: $request->validated('story_points'),
         );
     }
 }
