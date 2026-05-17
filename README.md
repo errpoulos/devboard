@@ -1,58 +1,209 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# DevBoard
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Kanban-style team task board built with Laravel 11 and React 19. Organize work across workspaces, boards, and columns with real-time drag-and-drop collaboration.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Workspaces** — Isolated environments for teams; create, edit, and delete workspaces
+- **Boards** — Multiple boards per workspace, each auto-created with To Do / In Progress / Done columns
+- **Kanban** — Drag-and-drop tasks between columns with optimistic UI updates
+- **Real-time** — Live task movement and updates via Laravel Reverb WebSockets
+- **Member management** — Invite members by email, assign roles (owner, admin, member)
+- **Background jobs** — Queue-backed notifications and email via Laravel Horizon + Redis
+- **Full-text search** — Task and board search powered by Meilisearch + Laravel Scout
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tech Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Backend
+| Concern | Tool |
+|---|---|
+| Framework | Laravel 11 |
+| Auth | Laravel Sanctum (SPA cookie auth) |
+| WebSockets | Laravel Reverb + Laravel Echo |
+| Queues | Laravel Horizon (Redis driver) |
+| Search | Laravel Scout + Meilisearch |
+| Feature flags | Laravel Pennant |
+| Debugging | Laravel Telescope (dev only) |
+| Monitoring | Laravel Pulse |
+| Testing | Pest + PHPUnit |
+| Code style | Laravel Pint |
+| Database | MySQL 8 + Redis 7 |
+| Environment | Laravel Sail (Docker Compose) |
 
-## Learning Laravel
+### Frontend
+| Concern | Tool |
+|---|---|
+| Framework | React 19 |
+| Build | Vite |
+| Routing | React Router v7 |
+| Server state | TanStack Query v5 |
+| Client state | Zustand |
+| WebSockets | Laravel Echo + pusher-js |
+| Forms | React Hook Form + Zod |
+| Drag and drop | @dnd-kit/core |
+| Styling | Tailwind CSS v4 + shadcn/ui |
+| Testing | Vitest + React Testing Library |
+| HTTP | Axios (CSRF-configured) |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Prerequisites
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+- [Docker](https://www.docker.com/) and Docker Compose
+- [Composer](https://getcomposer.org/) (for installing Sail before Docker takes over)
+- Node.js 22+ (only needed if running the frontend outside Docker)
 
-## Agentic Development
+---
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Installation
+
+### 1. Clone and install PHP dependencies
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <repo-url> devboard
+cd devboard
+composer install --no-scripts
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Configure environment
 
-## Contributing
+```bash
+cp .env.example .env
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Edit `.env` and set at minimum:
 
-## Code of Conduct
+```dotenv
+APP_KEY=          # filled by artisan key:generate below
+DB_HOST=mysql     # matches the Sail service name
+REDIS_HOST=redis  # matches the Sail service name
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+The defaults in `.env.example` work out of the box with Sail — you only need to change values for external services (mail, etc.).
 
-## Security Vulnerabilities
+### 3. Start all services with Sail
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+./vendor/bin/sail up -d
+```
 
-## License
+This starts: Laravel app (port 8000), MySQL (port 3307), Redis, Meilisearch (port 7700), Reverb WebSocket server (port 8080), Horizon queue worker, and the Vite frontend dev server (port 5173).
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 4. Generate app key and migrate
+
+```bash
+./vendor/bin/sail artisan key:generate
+./vendor/bin/sail artisan migrate --seed
+```
+
+The seeder creates a demo user:
+- **Email:** `test@example.com`
+- **Password:** `password`
+
+### 5. Open the app
+
+Visit [http://localhost:5173](http://localhost:5173) and log in.
+
+---
+
+## Running Without Docker (manual setup)
+
+If you prefer not to use Sail:
+
+```bash
+# Backend
+php artisan key:generate
+php artisan migrate --seed
+php artisan serve          # http://localhost:8000
+php artisan reverb:start --debug &
+php artisan horizon &
+
+# Frontend
+cd frontend
+npm install
+npm run dev                # http://localhost:5173
+```
+
+Ensure MySQL, Redis, and Meilisearch are running locally and that `.env` points to them.
+
+---
+
+## Environment Variables
+
+Key variables beyond standard Laravel defaults:
+
+```dotenv
+# Sanctum — must include the frontend origin
+SANCTUM_STATEFUL_DOMAINS=localhost:5173
+
+# Reverb WebSocket server
+REVERB_APP_ID=devboard-local
+REVERB_APP_KEY=devboard-key
+REVERB_APP_SECRET=devboard-secret
+REVERB_HOST=localhost
+REVERB_PORT=8080
+REVERB_SCHEME=http
+
+# Meilisearch
+MEILISEARCH_HOST=http://meilisearch:7700
+MEILISEARCH_KEY=
+
+# Queue
+QUEUE_CONNECTION=redis
+
+# Vite (must match Reverb values above)
+VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
+VITE_REVERB_HOST="${REVERB_HOST}"
+VITE_REVERB_PORT="${REVERB_PORT}"
+VITE_REVERB_SCHEME="${REVERB_SCHEME}"
+VITE_API_BASE_URL=http://localhost/api/v1
+```
+
+---
+
+## Running Tests
+
+### Backend (Pest)
+
+```bash
+./vendor/bin/sail pest
+```
+
+Feature tests live in `tests/Feature/Api/V1/`, unit tests in `tests/Unit/Services/`.
+
+### Frontend (Vitest)
+
+```bash
+cd frontend && npm run test
+```
+
+Tests live alongside the code they test (e.g., `features/tasks/TaskCard.test.tsx`).
+
+### Code style
+
+```bash
+./vendor/bin/sail pint          # fix PHP style
+cd frontend && npm run lint     # ESLint + Prettier
+```
+
+---
+
+## API Overview
+
+All endpoints are versioned under `/api/v1/` and require Sanctum cookie auth (except login).
+
+| Group | Routes |
+|---|---|
+| Auth | `POST /auth/login`, `POST /auth/logout`, `GET /auth/me` |
+| Workspaces | `GET/POST /workspaces`, `GET/PATCH/DELETE /workspaces/{workspace}` |
+| Members | `GET /workspaces/{workspace}/members`, `POST …/invite`, `DELETE …/{member}` |
+| Boards | `GET/POST /workspaces/{workspace}/boards`, `GET/DELETE …/{board}` |
+| Columns | `POST /workspaces/{workspace}/boards/{board}/columns/reorder` |
+| Tasks | Full CRUD + reorder under `/workspaces/{workspace}/boards/{board}/tasks` |
+| Comments | `GET/POST/DELETE` under `/workspaces/{workspace}/boards/{board}/tasks/{task}/comments` |
+
+---
+
+## Architecture
+
+DevBoard follows a strict layered architecture: thin controllers delegate to service classes, data moves between layers via readonly DTOs, all authorization goes through Laravel Policies, and every API response is wrapped in an API Resource. Side effects (notifications, activity logs) are handled by queued event listeners to keep the HTTP cycle fast. See [CLAUDE.md](CLAUDE.md) for the full architecture reference and coding conventions.
