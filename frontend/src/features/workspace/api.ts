@@ -1,5 +1,5 @@
 import api from '@/api/axios'
-import type { ApiResource, Board, Workspace } from '@/types'
+import type { ApiResource, Board, BoardColumn, Workspace } from '@/types'
 
 export async function getWorkspaces(): Promise<Workspace[]> {
   const res = await api.get<{ data: Workspace[] }>('/workspaces')
@@ -39,4 +39,37 @@ export async function updateWorkspace(
 
 export async function deleteWorkspace(id: number): Promise<void> {
   await api.delete(`/workspaces/${id}`)
+}
+
+export async function createColumn(
+  workspaceId: number,
+  boardId: number,
+  data: { name: string; color?: string },
+): Promise<BoardColumn> {
+  const res = await api.post<ApiResource<BoardColumn>>(
+    `/workspaces/${workspaceId}/boards/${boardId}/columns`,
+    data,
+  )
+  return res.data.data
+}
+
+export async function updateColumn(
+  workspaceId: number,
+  boardId: number,
+  columnId: number,
+  data: { name?: string; color?: string | null },
+): Promise<BoardColumn> {
+  const res = await api.patch<ApiResource<BoardColumn>>(
+    `/workspaces/${workspaceId}/boards/${boardId}/columns/${columnId}`,
+    data,
+  )
+  return res.data.data
+}
+
+export async function deleteColumn(
+  workspaceId: number,
+  boardId: number,
+  columnId: number,
+): Promise<void> {
+  await api.delete(`/workspaces/${workspaceId}/boards/${boardId}/columns/${columnId}`)
 }

@@ -33,7 +33,10 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('boards', BoardController::class)->only(['index', 'store', 'show', 'destroy']);
 
             Route::prefix('boards/{board}')->group(function () {
-                // Column reorder
+                // Columns
+                Route::post('columns', [BoardColumnController::class, 'store'])->name('boards.columns.store');
+                Route::patch('columns/{column}', [BoardColumnController::class, 'update'])->name('boards.columns.update');
+                Route::delete('columns/{column}', [BoardColumnController::class, 'destroy'])->name('boards.columns.destroy');
                 Route::post('columns/reorder', [BoardColumnController::class, 'reorder'])->name('boards.columns.reorder');
 
                 // Tasks

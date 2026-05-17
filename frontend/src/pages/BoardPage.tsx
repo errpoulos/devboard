@@ -9,6 +9,7 @@ import {
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 import { useBoard } from '@/features/workspace/hooks/useWorkspaces'
+import { useCreateColumn } from '@/features/workspace/hooks/useWorkspaces'
 import { useReorderTasks, useUpdateTask } from '@/features/tasks/hooks/useTasks'
 import { useBoardChannel } from '@/features/tasks/hooks/useBoardChannel'
 import { useBoardStore } from '@/store/boardStore'
@@ -24,8 +25,11 @@ export default function BoardPage() {
   const { data: board, isLoading } = useBoard(wsId, bId)
   const reorderTasks = useReorderTasks(wsId, bId)
   const updateTask = useUpdateTask(wsId, bId)
+  const createColumn = useCreateColumn(wsId, bId)
   const { optimisticTasks, setColumnTasks, moveTask, reset } = useBoardStore()
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [showColumnForm, setShowColumnForm] = useState(false)
+  const [newColumnName, setNewColumnName] = useState('')
 
   useBoardChannel(wsId, bId)
 
@@ -69,14 +73,25 @@ export default function BoardPage() {
     }
   }
 
+  function handleAddColumn() {
+    const trimmed = newColumnName.trim()
+    if (!trimmed) return
+    createColumn.mutate(
+      { name: trimmed },
+      { onSuccess: () => { setNewColumnName(''); setShowColumnForm(false) } },
+    )
+  }
+
+  const columns = board.columns ?? []
+
   return (
     <div>
       <h1 className="text-[20px] font-[590] text-porcelain tracking-[-0.22px] mb-6">
         {board.name}
       </h1>
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 overflow-x-auto pb-4">
-          {board.columns?.map((col) => (
+        <div className="flex gap-4 overflow-x-auto pb-4 items-start">
+          {columns.map((col) => (
             <KanbanColumn
               key={col.id}
               column={col}
@@ -86,12 +101,57 @@ export default function BoardPage() {
               onTaskClick={setSelectedTask}
             />
           ))}
+
+          {/* Add column */}
+          <div className="shrink-0 w-64">
+            {showColumnForm ? (
+              <div
+                className="rounded-md border border-charcoal-grey p-3 flex flex-col gap-2"
+                style={{ background: '#0f1011' }}
+              >
+                <input
+                  className="w-full text-[13px] text-porcelain bg-transparent border border-charcoal-grey rounded px-2 py-1.5 placeholder:text-fog-grey focus:outline-none focus:border-muted-ash tracking-[-0.13px]"
+                  placeholder="Column name…"
+                  value={newColumnName}
+                  autoFocus
+                  onChange={(e) => setNewColumnName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleAddColumn()
+                    if (e.key === 'Escape') { setShowColumnForm(false); setNewColumnName('') }
+                  }}
+                />
+                <div className="flex gap-1.5">
+                  <button
+                    className="flex-1 text-[12px] font-[590] bg-neon-lime text-pitch-black rounded py-1 disabled:opacity-40"
+                    onClick={handleAddColumn}
+                    disabled={createColumn.isPending}
+                  >
+                    Add column
+                  </button>
+                  <button
+                    className="text-[12px] text-fog-grey hover:text-storm-cloud px-2 transition-colors"
+                    onClick={() => { setShowColumnForm(false); setNewColumnName('') }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                className="w-full text-[12px] text-fog-grey hover:text-storm-cloud border border-dashed border-charcoal-grey hover:border-muted-ash rounded-md py-3 transition-colors"
+                onClick={() => setShowColumnForm(true)}
+              >
+                + Add column
+              </button>
+            )}
+          </div>
         </div>
       </DndContext>
 
       {selectedTask && (
         <TaskDetailModal
           task={selectedTask}
+          columns={columns}
           workspaceId={wsId}
           boardId={bId}
           onClose={() => setSelectedTask(null)}

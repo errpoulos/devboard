@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Task } from '@/types'
+import type { BoardColumn, Task } from '@/types'
 import { useUpdateTask, useDeleteTask } from '@/features/tasks/hooks/useTasks'
 import { cn } from '@/lib/utils'
 
@@ -19,23 +19,24 @@ function toDateInputValue(dateStr: string | null): string {
 
 interface Props {
   task: Task
+  columns: BoardColumn[]
   workspaceId: number
   boardId: number
   onClose: () => void
 }
 
-export default function TaskDetailModal({ task, workspaceId, boardId, onClose }: Props) {
+export default function TaskDetailModal({ task, columns, workspaceId, boardId, onClose }: Props) {
   const updateTask = useUpdateTask(workspaceId, boardId)
   const deleteTask = useDeleteTask(workspaceId, boardId)
 
   const [title, setTitle] = useState(task.title)
   const [description, setDescription] = useState(task.description ?? '')
   const [priority, setPriority] = useState<Task['priority']>(task.priority)
+  const [columnId, setColumnId] = useState(task.board_column_id)
   const [storyPoints, setStoryPoints] = useState<string>(
     task.story_points != null ? String(task.story_points) : '',
   )
   const [dueAt, setDueAt] = useState(toDateInputValue(task.due_at))
-  const [completed, setCompleted] = useState(!!task.completed_at)
 
   const backdropRef = useRef<HTMLDivElement>(null)
 
@@ -53,9 +54,9 @@ export default function TaskDetailModal({ task, workspaceId, boardId, onClose }:
           title: title.trim() || task.title,
           description: description || null,
           priority,
+          board_column_id: columnId,
           story_points: storyPoints !== '' ? Number(storyPoints) : null,
           due_at: dueAt || null,
-          completed_at: completed ? (task.completed_at ?? new Date().toISOString()) : null,
         },
       },
       { onSuccess: onClose },
@@ -69,9 +70,12 @@ export default function TaskDetailModal({ task, workspaceId, boardId, onClose }:
 
   const isPending = updateTask.isPending || deleteTask.isPending
   const activePriority = priorityConfig[priority]
+  const activeColumn = columns.find((c) => c.id === columnId)
 
   const inputClass =
     'w-full text-[13px] text-porcelain bg-transparent border border-charcoal-grey rounded-md px-3 py-2 placeholder:text-fog-grey focus:outline-none focus:border-muted-ash tracking-[-0.13px]'
+
+  const selectStyle = { background: '#161718' }
 
   return (
     <div
@@ -104,28 +108,6 @@ export default function TaskDetailModal({ task, workspaceId, boardId, onClose }:
 
         {/* Body */}
         <div className="px-5 py-4 space-y-4 flex-1">
-          {/* Completion toggle */}
-          <label className="flex items-center gap-2 cursor-pointer w-fit group">
-            <div
-              className={cn(
-                'w-4 h-4 rounded border flex items-center justify-center transition-colors',
-                completed
-                  ? 'bg-emerald border-emerald'
-                  : 'border-charcoal-grey group-hover:border-muted-ash',
-              )}
-              onClick={() => setCompleted((v) => !v)}
-            >
-              {completed && (
-                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-            </div>
-            <span className="text-[13px] text-storm-cloud group-hover:text-light-steel transition-colors tracking-[-0.13px]">
-              {completed ? 'Completed' : 'Mark as complete'}
-            </span>
-          </label>
-
           {/* Description */}
           <div>
             <label className="block text-[11px] text-fog-grey tracking-[-0.1px] uppercase mb-1.5">
@@ -140,8 +122,41 @@ export default function TaskDetailModal({ task, workspaceId, boardId, onClose }:
             />
           </div>
 
-          {/* Fields grid */}
-          <div className="grid grid-cols-3 gap-3">
+          {/* Fields grid — Status + Priority */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Status */}
+            <div>
+              <label className="block text-[11px] text-fog-grey tracking-[-0.1px] uppercase mb-1.5">
+                Status
+              </label>
+              <select
+                className={cn(inputClass, 'cursor-pointer')}
+                value={columnId}
+                style={selectStyle}
+                onChange={(e) => setColumnId(Number(e.target.value))}
+              >
+                {columns.map((col) => (
+                  <option key={col.id} value={col.id} style={selectStyle}>
+                    {col.name}
+                  </option>
+                ))}
+              </select>
+              {activeColumn && (
+                <span className="mt-1.5 flex items-center gap-1.5">
+                  {activeColumn.color && (
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: activeColumn.color }}
+                    />
+                  )}
+                  <span className="text-[11px] text-storm-cloud tracking-[-0.1px]">
+                    {activeColumn.name}
+                  </span>
+                </span>
+              )}
+            </div>
+
+            {/* Priority */}
             <div>
               <label className="block text-[11px] text-fog-grey tracking-[-0.1px] uppercase mb-1.5">
                 Priority
@@ -149,11 +164,11 @@ export default function TaskDetailModal({ task, workspaceId, boardId, onClose }:
               <select
                 className={cn(inputClass, 'cursor-pointer')}
                 value={priority}
-                style={{ background: '#161718' }}
+                style={selectStyle}
                 onChange={(e) => setPriority(e.target.value as Task['priority'])}
               >
                 {PRIORITIES.map((p) => (
-                  <option key={p} value={p} style={{ background: '#161718' }}>
+                  <option key={p} value={p} style={selectStyle}>
                     {p.charAt(0).toUpperCase() + p.slice(1)}
                   </option>
                 ))}
@@ -168,7 +183,10 @@ export default function TaskDetailModal({ task, workspaceId, boardId, onClose }:
                 {activePriority.label}
               </span>
             </div>
+          </div>
 
+          {/* Story points + Due date */}
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] text-fog-grey tracking-[-0.1px] uppercase mb-1.5">
                 Story Points

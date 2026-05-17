@@ -22,6 +22,24 @@ class BoardService
         return $board->load('columns');
     }
 
+    public function createColumn(Board $board, string $name, ?string $color): BoardColumn
+    {
+        $position = $board->columns()->max('position') + 1;
+
+        return $board->columns()->create([
+            'name' => $name,
+            'color' => $color,
+            'position' => $position,
+        ]);
+    }
+
+    public function updateColumn(BoardColumn $column, string $name, ?string $color): BoardColumn
+    {
+        $column->update(['name' => $name, 'color' => $color]);
+
+        return $column;
+    }
+
     public function reorderColumns(Board $board, array $orderedIds): void
     {
         foreach ($orderedIds as $position => $columnId) {
