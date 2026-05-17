@@ -2,7 +2,8 @@ import api from '@/api/axios'
 import type { ApiResource, User } from '@/types'
 
 export async function csrfCookie() {
-  await api.get('/sanctum/csrf-cookie', { baseURL: '' })
+  const backendUrl = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8001'
+  await api.get('/sanctum/csrf-cookie', { baseURL: backendUrl })
 }
 
 export async function login(email: string, password: string): Promise<User> {
