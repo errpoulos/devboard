@@ -35,29 +35,55 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Sign in to DevBoard</h1>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <Input {...register('email')} type="email" placeholder="you@example.com" />
-            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <Input {...register('password')} type="password" placeholder="••••••••" />
-            {errors.password && (
-              <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+    <div className="min-h-screen flex items-center justify-center bg-pitch-black">
+      <div className="w-full max-w-sm">
+        <h1 className="text-[24px] font-[590] text-porcelain tracking-[-0.22px] leading-[1.33] mb-8 text-center">
+          DevBoard
+        </h1>
+
+        <div
+          className="rounded-md p-6 space-y-4"
+          style={{
+            background: '#0f1011',
+            boxShadow: 'rgba(0, 0, 0, 0.4) 0px 2px 4px 0px',
+          }}
+        >
+          <h2 className="text-[15px] font-[510] text-porcelain tracking-[-0.13px] mb-5">
+            Sign in
+          </h2>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+            <div>
+              <label className="block text-[12px] text-storm-cloud tracking-[-0.1px] mb-1.5">
+                Email
+              </label>
+              <Input {...register('email')} type="email" placeholder="you@example.com" />
+              {errors.email && (
+                <p className="mt-1 text-[12px] text-warning-red">{errors.email.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-[12px] text-storm-cloud tracking-[-0.1px] mb-1.5">
+                Password
+              </label>
+              <Input {...register('password')} type="password" placeholder="••••••••" />
+              {errors.password && (
+                <p className="mt-1 text-[12px] text-warning-red">{errors.password.message}</p>
+              )}
+            </div>
+
+            {error && (
+              <p className="text-[12px] text-warning-red">Invalid email or password.</p>
             )}
-          </div>
-          {error && (
-            <p className="text-sm text-red-600">Invalid email or password.</p>
-          )}
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? 'Signing in…' : 'Sign in'}
-          </Button>
-        </form>
+
+            <div className="pt-1">
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? 'Signing in…' : 'Sign in'}
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )

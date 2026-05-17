@@ -12,19 +12,21 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+          'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40 cursor-pointer',
           {
-            'bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-600':
+            'bg-neon-lime text-pitch-black hover:bg-[#cdd91f] font-[590] tracking-[-0.13px]':
               variant === 'default',
-            'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50':
+            'border border-charcoal-grey bg-transparent text-light-steel hover:bg-deep-slate hover:border-muted-ash':
               variant === 'outline',
-            'text-gray-700 hover:bg-gray-100': variant === 'ghost',
-            'bg-red-600 text-white hover:bg-red-700': variant === 'destructive',
+            'bg-transparent text-storm-cloud hover:text-porcelain hover:bg-charcoal-grey':
+              variant === 'ghost',
+            'bg-transparent text-warning-red hover:bg-warning-red/10':
+              variant === 'destructive',
           },
           {
-            'h-8 px-3 text-sm': size === 'sm',
-            'h-10 px-4 text-sm': size === 'md',
-            'h-12 px-6 text-base': size === 'lg',
+            'h-7 px-3 text-[13px]': size === 'sm',
+            'h-9 px-4 text-[14px]': size === 'md',
+            'h-11 px-6 text-[15px]': size === 'lg',
           },
           className,
         )}

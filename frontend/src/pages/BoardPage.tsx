@@ -39,8 +39,8 @@ export default function BoardPage() {
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
-  if (isLoading) return <p className="text-gray-500">Loading board…</p>
-  if (!board) return <p className="text-red-500">Board not found.</p>
+  if (isLoading) return <p className="text-[13px] text-storm-cloud">Loading board…</p>
+  if (!board) return <p className="text-[13px] text-warning-red">Board not found.</p>
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -62,10 +62,7 @@ export default function BoardPage() {
       const oldIdx = fromTasks.findIndex((t) => t.id === active.id)
       const reordered = arrayMove(fromTasks, oldIdx, newPosition)
       setColumnTasks(fromColumnId, reordered)
-      reorderTasks.mutate({
-        columnId: fromColumnId,
-        orderedIds: reordered.map((t) => t.id),
-      })
+      reorderTasks.mutate({ columnId: fromColumnId, orderedIds: reordered.map((t) => t.id) })
     } else {
       moveTask(task.id, fromColumnId, toColumnId, newPosition)
       updateTask.mutate({ taskId: task.id, data: { board_column_id: toColumnId } })
@@ -74,7 +71,9 @@ export default function BoardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">{board.name}</h1>
+      <h1 className="text-[20px] font-[590] text-porcelain tracking-[-0.22px] mb-6">
+        {board.name}
+      </h1>
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div className="flex gap-4 overflow-x-auto pb-4">
           {board.columns?.map((col) => (

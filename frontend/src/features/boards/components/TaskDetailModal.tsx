@@ -5,11 +5,11 @@ import { cn } from '@/lib/utils'
 
 const PRIORITIES = ['low', 'medium', 'high', 'urgent'] as const
 
-const priorityColors: Record<Task['priority'], string> = {
-  low: 'bg-gray-100 text-gray-600',
-  medium: 'bg-blue-100 text-blue-700',
-  high: 'bg-amber-100 text-amber-700',
-  urgent: 'bg-red-100 text-red-700',
+const priorityConfig: Record<Task['priority'], { label: string; className: string }> = {
+  low:    { label: 'Low',    className: 'bg-gunmetal text-storm-cloud' },
+  medium: { label: 'Medium', className: 'bg-aether-blue/20 text-aether-blue' },
+  high:   { label: 'High',   className: 'bg-[#2d1f00] text-[#d97706]' },
+  urgent: { label: 'Urgent', className: 'bg-warning-red/15 text-warning-red' },
 }
 
 function toDateInputValue(dateStr: string | null): string {
@@ -40,9 +40,7 @@ export default function TaskDetailModal({ task, workspaceId, boardId, onClose }:
   const backdropRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
@@ -57,9 +55,7 @@ export default function TaskDetailModal({ task, workspaceId, boardId, onClose }:
           priority,
           story_points: storyPoints !== '' ? Number(storyPoints) : null,
           due_at: dueAt || null,
-          completed_at: completed
-            ? (task.completed_at ?? new Date().toISOString())
-            : null,
+          completed_at: completed ? (task.completed_at ?? new Date().toISOString()) : null,
         },
       },
       { onSuccess: onClose },
@@ -72,23 +68,34 @@ export default function TaskDetailModal({ task, workspaceId, boardId, onClose }:
   }
 
   const isPending = updateTask.isPending || deleteTask.isPending
+  const activePriority = priorityConfig[priority]
+
+  const inputClass =
+    'w-full text-[13px] text-porcelain bg-transparent border border-charcoal-grey rounded-md px-3 py-2 placeholder:text-fog-grey focus:outline-none focus:border-muted-ash tracking-[-0.13px]'
 
   return (
     <div
       ref={backdropRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-pitch-black/70 p-4"
       onClick={(e) => e.target === backdropRef.current && onClose()}
     >
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto flex flex-col">
+      <div
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto flex flex-col rounded-md"
+        style={{
+          background: '#161718',
+          boxShadow: 'rgba(8, 9, 10, 0.6) 0px 4px 32px 0px, rgb(35, 37, 42) 0px 0px 0px 1px inset',
+        }}
+      >
         {/* Header */}
-        <div className="flex items-start gap-3 p-5 border-b border-gray-100">
+        <div className="flex items-start gap-3 px-5 py-4 border-b border-charcoal-grey">
           <input
-            className="flex-1 text-lg font-semibold text-gray-900 bg-transparent border-0 border-b-2 border-transparent focus:border-blue-500 focus:outline-none pb-0.5"
+            className="flex-1 text-[16px] font-[510] text-porcelain bg-transparent border-0 focus:outline-none tracking-[-0.13px] placeholder:text-fog-grey"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            placeholder="Task title"
           />
           <button
-            className="text-gray-400 hover:text-gray-600 text-xl leading-none mt-0.5 shrink-0"
+            className="text-fog-grey hover:text-storm-cloud text-lg leading-none mt-0.5 shrink-0 transition-colors"
             onClick={onClose}
           >
             ×
@@ -96,23 +103,36 @@ export default function TaskDetailModal({ task, workspaceId, boardId, onClose }:
         </div>
 
         {/* Body */}
-        <div className="p-5 space-y-4 flex-1">
+        <div className="px-5 py-4 space-y-4 flex-1">
           {/* Completion toggle */}
-          <label className="flex items-center gap-2 cursor-pointer w-fit">
-            <input
-              type="checkbox"
-              checked={completed}
-              onChange={(e) => setCompleted(e.target.checked)}
-              className="w-4 h-4 rounded accent-green-600"
-            />
-            <span className="text-sm text-gray-600">Mark as complete</span>
+          <label className="flex items-center gap-2 cursor-pointer w-fit group">
+            <div
+              className={cn(
+                'w-4 h-4 rounded border flex items-center justify-center transition-colors',
+                completed
+                  ? 'bg-emerald border-emerald'
+                  : 'border-charcoal-grey group-hover:border-muted-ash',
+              )}
+              onClick={() => setCompleted((v) => !v)}
+            >
+              {completed && (
+                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+            <span className="text-[13px] text-storm-cloud group-hover:text-light-steel transition-colors tracking-[-0.13px]">
+              {completed ? 'Completed' : 'Mark as complete'}
+            </span>
           </label>
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Description</label>
+            <label className="block text-[11px] text-fog-grey tracking-[-0.1px] uppercase mb-1.5">
+              Description
+            </label>
             <textarea
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className={cn(inputClass, 'resize-none')}
               rows={3}
               placeholder="Add a description…"
               value={description}
@@ -122,78 +142,90 @@ export default function TaskDetailModal({ task, workspaceId, boardId, onClose }:
 
           {/* Fields grid */}
           <div className="grid grid-cols-3 gap-3">
-            {/* Priority */}
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Priority</label>
+              <label className="block text-[11px] text-fog-grey tracking-[-0.1px] uppercase mb-1.5">
+                Priority
+              </label>
               <select
-                className="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                className={cn(inputClass, 'cursor-pointer')}
                 value={priority}
+                style={{ background: '#161718' }}
                 onChange={(e) => setPriority(e.target.value as Task['priority'])}
               >
                 {PRIORITIES.map((p) => (
-                  <option key={p} value={p}>
+                  <option key={p} value={p} style={{ background: '#161718' }}>
                     {p.charAt(0).toUpperCase() + p.slice(1)}
                   </option>
                 ))}
               </select>
-              <span className={cn('mt-1 inline-block text-xs px-1.5 py-0.5 rounded font-medium', priorityColors[priority])}>
-                {priority}
+              <span
+                className={cn(
+                  'mt-1.5 inline-block text-[11px] px-1.5 py-0.5 font-[510] tracking-[-0.1px]',
+                  activePriority.className,
+                )}
+                style={{ borderRadius: '4px' }}
+              >
+                {activePriority.label}
               </span>
             </div>
 
-            {/* Story points */}
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Story Points</label>
+              <label className="block text-[11px] text-fog-grey tracking-[-0.1px] uppercase mb-1.5">
+                Story Points
+              </label>
               <input
                 type="number"
                 min={0}
                 max={999}
-                className="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
                 placeholder="—"
                 value={storyPoints}
                 onChange={(e) => setStoryPoints(e.target.value)}
               />
             </div>
 
-            {/* Due date */}
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Due Date</label>
+              <label className="block text-[11px] text-fog-grey tracking-[-0.1px] uppercase mb-1.5">
+                Due Date
+              </label>
               <input
                 type="date"
-                className="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
+                style={{ colorScheme: 'dark' }}
                 value={dueAt}
                 onChange={(e) => setDueAt(e.target.value)}
               />
             </div>
           </div>
 
-          {/* Assignee (read-only for now) */}
           {task.assignee && (
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Assignee</label>
-              <p className="text-sm text-gray-700">{task.assignee.name}</p>
+              <label className="block text-[11px] text-fog-grey tracking-[-0.1px] uppercase mb-1.5">
+                Assignee
+              </label>
+              <p className="text-[13px] text-light-steel tracking-[-0.13px]">{task.assignee.name}</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-2 p-5 border-t border-gray-100">
+        <div className="flex items-center justify-between gap-2 px-5 py-3 border-t border-charcoal-grey">
           <button
-            className="text-sm text-red-500 hover:text-red-700 disabled:opacity-50"
+            className="text-[13px] text-fog-grey hover:text-warning-red transition-colors disabled:opacity-40 tracking-[-0.13px]"
             onClick={handleDelete}
             disabled={isPending}
           >
-            Delete task
+            Delete
           </button>
           <div className="flex gap-2">
             <button
-              className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1.5"
+              className="text-[13px] text-storm-cloud hover:text-porcelain px-3 py-1.5 transition-colors tracking-[-0.13px]"
               onClick={onClose}
             >
               Cancel
             </button>
             <button
-              className="text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-1.5 font-medium disabled:opacity-50"
+              className="text-[13px] font-[590] bg-neon-lime text-pitch-black rounded-md px-4 py-1.5 disabled:opacity-40 tracking-[-0.13px] hover:bg-[#cdd91f] transition-colors"
               onClick={handleSave}
               disabled={isPending}
             >
