@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/authStore'
 import LoginPage from '@/pages/LoginPage'
 import WorkspacesPage from '@/pages/WorkspacesPage'
 import BoardPage from '@/pages/BoardPage'
+import ImportPage from '@/pages/ImportPage'
 import DashboardLayout from '@/components/DashboardLayout'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -24,6 +25,7 @@ export default function App() {
         <Route index element={<Navigate to="/workspaces" replace />} />
         <Route path="workspaces" element={<WorkspacesPage />} />
         <Route path="workspaces/:workspaceId/boards/:boardId" element={<BoardPage />} />
+        <Route path="import" element={<ImportPage />} />
       </Route>
     </Routes>
   )
