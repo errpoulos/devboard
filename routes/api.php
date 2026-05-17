@@ -20,7 +20,7 @@ Route::prefix('v1')->group(function () {
         Route::get('auth/me', [AuthController::class, 'me'])->name('auth.me');
 
         // Workspaces
-        Route::apiResource('workspaces', WorkspaceController::class)->only(['index', 'store', 'show', 'destroy']);
+        Route::apiResource('workspaces', WorkspaceController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
 
         Route::prefix('workspaces/{workspace}')->middleware('workspace')->group(function () {
 

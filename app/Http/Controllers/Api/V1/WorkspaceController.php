@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\DTOs\StoreWorkspaceDTO;
+use App\DTOs\UpdateWorkspaceDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreWorkspaceRequest;
+use App\Http\Requests\UpdateWorkspaceRequest;
 use App\Http\Resources\WorkspaceResource;
 use App\Models\Workspace;
 use App\Services\WorkspaceService;
@@ -27,6 +29,18 @@ class WorkspaceController extends Controller
         $workspace = $this->workspaceService->create(
             data: StoreWorkspaceDTO::fromRequest($request),
             owner: $request->user(),
+        );
+
+        return new WorkspaceResource($workspace);
+    }
+
+    public function update(UpdateWorkspaceRequest $request, Workspace $workspace): WorkspaceResource
+    {
+        $this->authorize('update', $workspace);
+
+        $workspace = $this->workspaceService->update(
+            workspace: $workspace,
+            data: UpdateWorkspaceDTO::fromRequest($request),
         );
 
         return new WorkspaceResource($workspace);

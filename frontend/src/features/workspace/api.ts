@@ -28,3 +28,15 @@ export async function createBoard(
   const res = await api.post<ApiResource<Board>>(`/workspaces/${workspaceId}/boards`, data)
   return res.data.data
 }
+
+export async function updateWorkspace(
+  id: number,
+  data: { name: string; slug: string },
+): Promise<Workspace> {
+  const res = await api.patch<ApiResource<Workspace>>(`/workspaces/${id}`, data)
+  return res.data.data
+}
+
+export async function deleteWorkspace(id: number): Promise<void> {
+  await api.delete(`/workspaces/${id}`)
+}

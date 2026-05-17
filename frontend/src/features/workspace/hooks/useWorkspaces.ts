@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getWorkspaces, createWorkspace, getBoards, getBoard, createBoard } from '../api'
+import { getWorkspaces, createWorkspace, updateWorkspace, deleteWorkspace, getBoards, getBoard, createBoard } from '../api'
 import { queryKeys } from '@/api/queryKeys'
 
 export function useWorkspaces() {
@@ -13,6 +13,23 @@ export function useCreateWorkspace() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ name, slug }: { name: string; slug: string }) => createWorkspace(name, slug),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.workspaces() }),
+  })
+}
+
+export function useUpdateWorkspace() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: { name: string; slug: string } }) =>
+      updateWorkspace(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.workspaces() }),
+  })
+}
+
+export function useDeleteWorkspace() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => deleteWorkspace(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.workspaces() }),
   })
 }

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\DTOs\InviteMemberDTO;
 use App\DTOs\StoreWorkspaceDTO;
+use App\DTOs\UpdateWorkspaceDTO;
 use App\Events\MemberInvited;
 use App\Models\Invitation;
 use App\Models\User;
@@ -21,6 +22,13 @@ class WorkspaceService
         ]);
 
         $workspace->members()->attach($owner->id, ['role' => 'owner']);
+
+        return $workspace;
+    }
+
+    public function update(Workspace $workspace, UpdateWorkspaceDTO $data): Workspace
+    {
+        $workspace->update(['name' => $data->name, 'slug' => $data->slug]);
 
         return $workspace;
     }
