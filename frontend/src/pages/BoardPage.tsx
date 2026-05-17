@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router'
 import {
   DndContext,
@@ -12,8 +13,8 @@ import { useReorderTasks, useUpdateTask } from '@/features/tasks/hooks/useTasks'
 import { useBoardChannel } from '@/features/tasks/hooks/useBoardChannel'
 import { useBoardStore } from '@/store/boardStore'
 import KanbanColumn from '@/features/boards/components/KanbanColumn'
+import TaskDetailModal from '@/features/boards/components/TaskDetailModal'
 import type { Task } from '@/types'
-import { useEffect } from 'react'
 
 export default function BoardPage() {
   const { workspaceId, boardId } = useParams<{ workspaceId: string; boardId: string }>()
@@ -24,6 +25,7 @@ export default function BoardPage() {
   const reorderTasks = useReorderTasks(wsId, bId)
   const updateTask = useUpdateTask(wsId, bId)
   const { optimisticTasks, setColumnTasks, moveTask, reset } = useBoardStore()
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
 
   useBoardChannel(wsId, bId)
 
@@ -48,7 +50,8 @@ export default function BoardPage() {
     if (!task) return
 
     const fromColumnId = task.board_column_id
-    const toColumnId = typeof over.id === 'number' ? over.id : task.board_column_id
+    const overTask = over.data.current?.task as Task | undefined
+    const toColumnId = overTask ? overTask.board_column_id : (over.id as number)
 
     const toTasks = optimisticTasks[toColumnId] ?? []
     const overIdx = toTasks.findIndex((t) => t.id === over.id)
@@ -79,10 +82,22 @@ export default function BoardPage() {
               key={col.id}
               column={col}
               tasks={optimisticTasks[col.id] ?? col.tasks ?? []}
+              workspaceId={wsId}
+              boardId={bId}
+              onTaskClick={setSelectedTask}
             />
           ))}
         </div>
       </DndContext>
+
+      {selectedTask && (
+        <TaskDetailModal
+          task={selectedTask}
+          workspaceId={wsId}
+          boardId={bId}
+          onClose={() => setSelectedTask(null)}
+        />
+      )}
     </div>
   )
 }
