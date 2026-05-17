@@ -7,9 +7,12 @@ import {
   useDeleteWorkspace,
   useCreateBoard,
 } from '@/features/workspace/hooks/useWorkspaces'
+import { useImportBoards } from '@/features/csv/useCsvImport'
+import ImportCsvModal from '@/features/csv/ImportCsvModal'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useState } from 'react'
+import type { ImportResult } from '@/features/csv/api'
 import type { Workspace } from '@/types'
 
 function BoardList({ workspace }: { workspace: Workspace }) {
@@ -75,7 +78,13 @@ function BoardList({ workspace }: { workspace: Workspace }) {
   )
 }
 
-function WorkspaceCard({ workspace }: { workspace: Workspace }) {
+function WorkspaceCard({
+  workspace,
+  onImport,
+}: {
+  workspace: Workspace
+  onImport: (id: number) => void
+}) {
   const [expanded, setExpanded] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState(workspace.name)
@@ -144,9 +153,18 @@ function WorkspaceCard({ workspace }: { workspace: Workspace }) {
             <span className="text-[12px] text-fog-grey tracking-[-0.1px]">{workspace.slug}</span>
           </div>
           <div
-            className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={(e) => e.stopPropagation()}
           >
+            <button
+              className="p-1 text-fog-grey hover:text-storm-cloud rounded transition-colors"
+              title="Import boards from CSV"
+              onClick={() => onImport(workspace.id)}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+            </button>
             <button
               className="p-1 text-fog-grey hover:text-storm-cloud rounded transition-colors"
               title="Edit workspace"
@@ -185,6 +203,9 @@ export default function WorkspacesPage() {
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
+  const [importWorkspaceId, setImportWorkspaceId] = useState<number | null>(null)
+  const [importResult, setImportResult] = useState<ImportResult | null>(null)
+  const importBoards = useImportBoards(importWorkspaceId ?? 0)
 
   if (isLoading) return <p className="text-[13px] text-storm-cloud">Loading workspaces…</p>
 
@@ -222,7 +243,7 @@ export default function WorkspacesPage() {
 
       <div className="space-y-2">
         {workspaces?.map((ws) => (
-          <WorkspaceCard key={ws.id} workspace={ws} />
+          <WorkspaceCard key={ws.id} workspace={ws} onImport={setImportWorkspaceId} />
         ))}
         {workspaces?.length === 0 && (
           <p className="text-[13px] text-fog-grey text-center py-12">
@@ -230,6 +251,21 @@ export default function WorkspacesPage() {
           </p>
         )}
       </div>
+
+      {importWorkspaceId && (
+        <ImportCsvModal
+          mode="boards"
+          workspaceId={importWorkspaceId}
+          isPending={importBoards.isPending}
+          result={importResult}
+          onImport={(file) =>
+            importBoards.mutate(file, {
+              onSuccess: (res) => setImportResult(res),
+            })
+          }
+          onClose={() => { setImportWorkspaceId(null); setImportResult(null) }}
+        />
+      )}
     </div>
   )
 }

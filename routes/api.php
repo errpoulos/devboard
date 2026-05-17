@@ -3,8 +3,10 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BoardColumnController;
 use App\Http\Controllers\Api\V1\BoardController;
+use App\Http\Controllers\Api\V1\BoardImportController;
 use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\TaskController;
+use App\Http\Controllers\Api\V1\TaskImportController;
 use App\Http\Controllers\Api\V1\TaskReorderController;
 use App\Http\Controllers\Api\V1\WorkspaceController;
 use App\Http\Controllers\Api\V1\WorkspaceMemberController;
@@ -30,6 +32,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('members/{member}', [WorkspaceMemberController::class, 'remove'])->name('workspaces.members.remove');
 
             // Boards
+            Route::post('boards/import', [BoardImportController::class, 'store'])->name('boards.import');
             Route::apiResource('boards', BoardController::class)->only(['index', 'store', 'show', 'destroy']);
 
             Route::prefix('boards/{board}')->group(function () {
@@ -40,6 +43,7 @@ Route::prefix('v1')->group(function () {
                 Route::post('columns/reorder', [BoardColumnController::class, 'reorder'])->name('boards.columns.reorder');
 
                 // Tasks
+                Route::post('tasks/import', [TaskImportController::class, 'store'])->name('tasks.import');
                 Route::apiResource('tasks', TaskController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
                 Route::post('tasks/reorder', TaskReorderController::class)->name('tasks.reorder');
 

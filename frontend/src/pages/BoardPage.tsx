@@ -8,13 +8,15 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
-import { useBoard } from '@/features/workspace/hooks/useWorkspaces'
-import { useCreateColumn } from '@/features/workspace/hooks/useWorkspaces'
+import { useBoard, useCreateColumn } from '@/features/workspace/hooks/useWorkspaces'
 import { useReorderTasks, useUpdateTask } from '@/features/tasks/hooks/useTasks'
 import { useBoardChannel } from '@/features/tasks/hooks/useBoardChannel'
 import { useBoardStore } from '@/store/boardStore'
+import { useImportTasks } from '@/features/csv/useCsvImport'
 import KanbanColumn from '@/features/boards/components/KanbanColumn'
 import TaskDetailModal from '@/features/boards/components/TaskDetailModal'
+import ImportCsvModal from '@/features/csv/ImportCsvModal'
+import type { ImportResult } from '@/features/csv/api'
 import type { Task } from '@/types'
 
 export default function BoardPage() {
@@ -30,6 +32,9 @@ export default function BoardPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [showColumnForm, setShowColumnForm] = useState(false)
   const [newColumnName, setNewColumnName] = useState('')
+  const [showImport, setShowImport] = useState(false)
+  const [importResult, setImportResult] = useState<ImportResult | null>(null)
+  const importTasks = useImportTasks(wsId, bId)
 
   useBoardChannel(wsId, bId)
 
@@ -86,9 +91,20 @@ export default function BoardPage() {
 
   return (
     <div>
-      <h1 className="text-[20px] font-[590] text-porcelain tracking-[-0.22px] mb-6">
-        {board.name}
-      </h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-[20px] font-[590] text-porcelain tracking-[-0.22px]">
+          {board.name}
+        </h1>
+        <button
+          className="flex items-center gap-1.5 text-[12px] text-fog-grey hover:text-storm-cloud transition-colors tracking-[-0.1px]"
+          onClick={() => { setShowImport(true); setImportResult(null) }}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          Import CSV
+        </button>
+      </div>
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div className="flex gap-4 overflow-x-auto pb-4 items-start">
           {columns.map((col) => (
@@ -155,6 +171,23 @@ export default function BoardPage() {
           workspaceId={wsId}
           boardId={bId}
           onClose={() => setSelectedTask(null)}
+        />
+      )}
+
+      {showImport && (
+        <ImportCsvModal
+          mode="tasks"
+          workspaceId={wsId}
+          boardId={bId}
+          columnNames={columns.map((c) => c.name)}
+          isPending={importTasks.isPending}
+          result={importResult}
+          onImport={(file) =>
+            importTasks.mutate(file, {
+              onSuccess: (res) => setImportResult(res),
+            })
+          }
+          onClose={() => { setShowImport(false); setImportResult(null) }}
         />
       )}
     </div>
