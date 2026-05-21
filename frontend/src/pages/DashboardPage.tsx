@@ -16,7 +16,7 @@ import { useWorkspaces, useBoards } from '@/features/workspace/hooks/useWorkspac
 import { useDashboard } from '@/features/dashboard/hooks/useDashboard'
 import type { Board } from '@/types'
 
-const FALLBACK_COLORS = [
+const STATUS_PALETTE = [
   '#5e6ad2',
   '#02b8cc',
   '#27a644',
@@ -27,8 +27,18 @@ const FALLBACK_COLORS = [
   '#ec4899',
 ]
 
-function columnColor(color: string | null, index: number): string {
-  return color ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length]
+function hashName(name: string): number {
+  let h = 0
+  for (let i = 0; i < name.length; i++) {
+    h = Math.imul(31, h) + name.charCodeAt(i) | 0
+  }
+  return Math.abs(h)
+}
+
+// Derive color from column name so the same status always renders the same
+// color regardless of which board it came from or what order it appears in.
+function columnColor(name: string): string {
+  return STATUS_PALETTE[hashName(name) % STATUS_PALETTE.length]
 }
 
 const tooltipStyle = {
@@ -111,8 +121,8 @@ function TasksByStatusWidget({
               outerRadius={90}
               strokeWidth={0}
             >
-              {pieData.map((entry, i) => (
-                <Cell key={entry.column} fill={columnColor(entry.color, i)} />
+              {pieData.map((entry) => (
+                <Cell key={entry.column} fill={columnColor(entry.column)} />
               ))}
             </Pie>
             <Tooltip
@@ -191,8 +201,8 @@ function AvgTimeWidget({
               cursor={{ fill: 'rgba(255,255,255,0.04)' }}
             />
             <Bar dataKey="avg_hours" radius={[2, 2, 0, 0]} maxBarSize={48}>
-              {barData.map((entry, i) => (
-                <Cell key={entry.column} fill={columnColor(entry.color, i)} />
+              {barData.map((entry) => (
+                <Cell key={entry.column} fill={columnColor(entry.column)} />
               ))}
             </Bar>
           </BarChart>
