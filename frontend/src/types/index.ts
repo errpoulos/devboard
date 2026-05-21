@@ -70,6 +70,24 @@ export interface Invitation {
   created_at: string
 }
 
+export interface DashboardStatusItem {
+  column: string
+  color: string | null
+  count: number
+}
+
+export interface DashboardAvgTimeItem {
+  column: string
+  color: string | null
+  avg_hours: number
+}
+
+export interface DashboardMetrics {
+  workspace_id: number
+  tasks_by_status: DashboardStatusItem[]
+  avg_time_per_status: DashboardAvgTimeItem[]
+}
+
 export interface PaginatedResponse<T> {
   data: T[]
   meta: {
