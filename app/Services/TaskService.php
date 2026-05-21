@@ -10,6 +10,7 @@ use App\Events\TaskMoved;
 use App\Events\TaskUpdated;
 use App\Models\Board;
 use App\Models\Task;
+use App\Models\TaskStatusLog;
 use App\Models\User;
 
 class TaskService
@@ -30,6 +31,12 @@ class TaskService
             'story_points' => $data->storyPoints,
         ]);
 
+        TaskStatusLog::create([
+            'task_id' => $task->id,
+            'board_column_id' => $task->board_column_id,
+            'entered_at' => now(),
+        ]);
+
         event(new TaskCreated($task, $actor));
 
         return $task->load(['assignee', 'column']);
@@ -39,7 +46,19 @@ class TaskService
     {
         if ($data->boardColumnId && $data->boardColumnId !== $task->board_column_id) {
             $fromColumn = $task->board_column_id;
+
+            TaskStatusLog::where('task_id', $task->id)
+                ->whereNull('exited_at')
+                ->update(['exited_at' => now()]);
+
             $task->update(['board_column_id' => $data->boardColumnId]);
+
+            TaskStatusLog::create([
+                'task_id' => $task->id,
+                'board_column_id' => $data->boardColumnId,
+                'entered_at' => now(),
+            ]);
+
             event(new TaskMoved($task, $actor, $fromColumn, $data->boardColumnId));
         }
 
