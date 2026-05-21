@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Board;
 use App\Models\BoardColumn;
 use App\Models\Task;
+use App\Models\TaskStatusLog;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -49,12 +50,29 @@ class DatabaseSeeder extends Seeder
 
         $allUsers = $members->push($admin);
 
+        // Avg hours tasks realistically spend in each status
+        $avgHours = ['To Do' => [24, 96], 'In Progress' => [4, 32], 'Review' => [2, 16], 'Done' => [1, 8]];
+
         foreach ($columns as $column) {
-            Task::factory(5)->create([
+            $tasks = Task::factory(5)->create([
                 'workspace_id' => $workspace->id,
                 'board_column_id' => $column->id,
                 'assignee_id' => $allUsers->random()->id,
             ]);
+
+            [$minH, $maxH] = $avgHours[$column->name];
+
+            foreach ($tasks as $task) {
+                $enteredAt = now()->subHours(rand($minH, $maxH));
+                $exitedAt = $column->name === 'Done' ? $enteredAt->copy()->addHours(rand(1, 6)) : null;
+
+                TaskStatusLog::create([
+                    'task_id' => $task->id,
+                    'board_column_id' => $column->id,
+                    'entered_at' => $enteredAt,
+                    'exited_at' => $exitedAt,
+                ]);
+            }
         }
     }
 }
