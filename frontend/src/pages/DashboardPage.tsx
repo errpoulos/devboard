@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useSearchParams } from 'react-router'
 import {
   PieChart,
   Pie,
@@ -84,11 +84,14 @@ function BoardSelect({
 function TasksByStatusWidget({
   workspaceId,
   boards,
+  boardId,
+  onBoardChange,
 }: {
   workspaceId: number
   boards: Board[]
+  boardId: number | null
+  onBoardChange: (id: number | null) => void
 }) {
-  const [boardId, setBoardId] = useState<number | null>(null)
   const { data: metrics, isLoading } = useDashboard(workspaceId, boardId)
   const pieData = metrics?.tasks_by_status.filter((d) => d.count > 0) ?? []
   const colors = buildColorMap(pieData.map((d) => d.column))
@@ -102,7 +105,7 @@ function TasksByStatusWidget({
         <h2 className="text-[13px] font-[590] text-porcelain tracking-[-0.13px]">
           Tasks by status
         </h2>
-        <BoardSelect boards={boards} value={boardId} onChange={setBoardId} />
+        <BoardSelect boards={boards} value={boardId} onChange={onBoardChange} />
       </div>
       <p className="text-[12px] text-fog-grey mb-4">
         {boardId ? boards.find((b) => b.id === boardId)?.name : 'All boards'}
@@ -154,11 +157,14 @@ function TasksByStatusWidget({
 function AvgTimeWidget({
   workspaceId,
   boards,
+  boardId,
+  onBoardChange,
 }: {
   workspaceId: number
   boards: Board[]
+  boardId: number | null
+  onBoardChange: (id: number | null) => void
 }) {
-  const [boardId, setBoardId] = useState<number | null>(null)
   const { data: metrics, isLoading } = useDashboard(workspaceId, boardId)
   const barData = metrics?.avg_time_per_status ?? []
   const colors = buildColorMap(barData.map((d) => d.column))
@@ -172,7 +178,7 @@ function AvgTimeWidget({
         <h2 className="text-[13px] font-[590] text-porcelain tracking-[-0.13px]">
           Avg time per status
         </h2>
-        <BoardSelect boards={boards} value={boardId} onChange={setBoardId} />
+        <BoardSelect boards={boards} value={boardId} onChange={onBoardChange} />
       </div>
       <p className="text-[12px] text-fog-grey mb-4">
         {boardId ? boards.find((b) => b.id === boardId)?.name : 'All boards'} — hours per column
@@ -220,14 +226,36 @@ function AvgTimeWidget({
   )
 }
 
+function parseId(value: string | null): number | null {
+  const n = Number(value)
+  return value && n > 0 ? n : null
+}
+
 export default function DashboardPage() {
+  const [params, setParams] = useSearchParams()
   const { data: workspaces, isLoading: loadingWorkspaces } = useWorkspaces()
-  const [workspaceId, setWorkspaceId] = useState<number | null>(null)
+
+  const workspaceId = parseId(params.get('workspace'))
+  const statusBoardId = parseId(params.get('status_board'))
+  const timeBoardId = parseId(params.get('time_board'))
+
   const { data: boards } = useBoards(workspaceId ?? 0)
+
+  function setParam(key: string, value: number | null) {
+    setParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (value) next.set(key, String(value))
+      else next.delete(key)
+      return next
+    })
+  }
+
+  function handleWorkspaceChange(id: number | null) {
+    setParams(id ? { workspace: String(id) } : {})
+  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-[18px] font-[590] text-porcelain tracking-[-0.2px]">Dashboard</h1>
@@ -239,7 +267,7 @@ export default function DashboardPage() {
         ) : (
           <select
             value={workspaceId ?? ''}
-            onChange={(e) => setWorkspaceId(e.target.value ? Number(e.target.value) : null)}
+            onChange={(e) => handleWorkspaceChange(e.target.value ? Number(e.target.value) : null)}
             className="bg-deep-slate border border-charcoal-grey text-[13px] text-porcelain px-3 py-1.5 focus:outline-none focus:border-muted-ash"
             style={{ borderRadius: '2px' }}
           >
@@ -262,8 +290,18 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <TasksByStatusWidget workspaceId={workspaceId} boards={boards ?? []} />
-          <AvgTimeWidget workspaceId={workspaceId} boards={boards ?? []} />
+          <TasksByStatusWidget
+            workspaceId={workspaceId}
+            boards={boards ?? []}
+            boardId={statusBoardId}
+            onBoardChange={(id) => setParam('status_board', id)}
+          />
+          <AvgTimeWidget
+            workspaceId={workspaceId}
+            boards={boards ?? []}
+            boardId={timeBoardId}
+            onBoardChange={(id) => setParam('time_board', id)}
+          />
         </div>
       )}
     </div>
