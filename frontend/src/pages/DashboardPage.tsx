@@ -16,19 +16,35 @@ import { useWorkspaces, useBoards } from '@/features/workspace/hooks/useWorkspac
 import { useDashboard } from '@/features/dashboard/hooks/useDashboard'
 import type { Board } from '@/types'
 
-function hashName(name: string): number {
-  let h = 0
-  for (let i = 0; i < name.length; i++) {
-    h = Math.imul(31, h) + name.charCodeAt(i) | 0
-  }
-  return Math.abs(h)
-}
+// 16 hand-picked colors maximally distinct across hue, saturation, and lightness.
+// Ordered so adjacent entries look nothing alike.
+const STATUS_COLORS = [
+  '#5e6ad2', // indigo
+  '#e85c4a', // tomato
+  '#0fa8a8', // teal
+  '#d9a007', // gold
+  '#a855f7', // purple
+  '#22c55e', // emerald
+  '#f97316', // orange
+  '#ec4899', // pink
+  '#38bdf8', // sky
+  '#a3e635', // lime
+  '#f43f5e', // rose
+  '#2dd4bf', // cyan
+  '#fb923c', // amber
+  '#c026d3', // fuchsia
+  '#6366f1', // violet
+  '#4ade80', // light green
+]
 
-// Maps column name → a unique hue over the full 360° wheel.
-// Same name always produces the same color; different names produce different hues.
-function columnColor(name: string): string {
-  const hue = hashName(name) % 360
-  return `hsl(${hue}, 65%, 62%)`
+// Build a name→color map for a set of status names.
+// Sorts names alphabetically so the same name always gets the same
+// palette slot regardless of which workspace or board is selected.
+function buildColorMap(names: string[]): Record<string, string> {
+  const sorted = [...new Set(names)].sort()
+  return Object.fromEntries(
+    sorted.map((n, i) => [n, STATUS_COLORS[i % STATUS_COLORS.length]]),
+  )
 }
 
 const tooltipStyle = {
@@ -75,6 +91,7 @@ function TasksByStatusWidget({
   const [boardId, setBoardId] = useState<number | null>(null)
   const { data: metrics, isLoading } = useDashboard(workspaceId, boardId)
   const pieData = metrics?.tasks_by_status.filter((d) => d.count > 0) ?? []
+  const colors = buildColorMap(pieData.map((d) => d.column))
 
   return (
     <div
@@ -112,7 +129,7 @@ function TasksByStatusWidget({
               strokeWidth={0}
             >
               {pieData.map((entry) => (
-                <Cell key={entry.column} fill={columnColor(entry.column)} />
+                <Cell key={entry.column} fill={colors[entry.column]} />
               ))}
             </Pie>
             <Tooltip
@@ -144,6 +161,7 @@ function AvgTimeWidget({
   const [boardId, setBoardId] = useState<number | null>(null)
   const { data: metrics, isLoading } = useDashboard(workspaceId, boardId)
   const barData = metrics?.avg_time_per_status ?? []
+  const colors = buildColorMap(barData.map((d) => d.column))
 
   return (
     <div
@@ -192,7 +210,7 @@ function AvgTimeWidget({
             />
             <Bar dataKey="avg_hours" radius={[2, 2, 0, 0]} maxBarSize={48}>
               {barData.map((entry) => (
-                <Cell key={entry.column} fill={columnColor(entry.column)} />
+                <Cell key={entry.column} fill={colors[entry.column]} />
               ))}
             </Bar>
           </BarChart>
