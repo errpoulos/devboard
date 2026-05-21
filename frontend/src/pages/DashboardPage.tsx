@@ -16,17 +16,6 @@ import { useWorkspaces, useBoards } from '@/features/workspace/hooks/useWorkspac
 import { useDashboard } from '@/features/dashboard/hooks/useDashboard'
 import type { Board } from '@/types'
 
-const STATUS_PALETTE = [
-  '#5e6ad2',
-  '#02b8cc',
-  '#27a644',
-  '#e4f222',
-  '#8b5cf6',
-  '#eb5757',
-  '#f59e0b',
-  '#ec4899',
-]
-
 function hashName(name: string): number {
   let h = 0
   for (let i = 0; i < name.length; i++) {
@@ -35,10 +24,11 @@ function hashName(name: string): number {
   return Math.abs(h)
 }
 
-// Derive color from column name so the same status always renders the same
-// color regardless of which board it came from or what order it appears in.
+// Maps column name → a unique hue over the full 360° wheel.
+// Same name always produces the same color; different names produce different hues.
 function columnColor(name: string): string {
-  return STATUS_PALETTE[hashName(name) % STATUS_PALETTE.length]
+  const hue = hashName(name) % 360
+  return `hsl(${hue}, 65%, 62%)`
 }
 
 const tooltipStyle = {
