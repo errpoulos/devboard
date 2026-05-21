@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\BoardColumnController;
 use App\Http\Controllers\Api\V1\BoardController;
 use App\Http\Controllers\Api\V1\BoardImportController;
 use App\Http\Controllers\Api\V1\CommentController;
+use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TaskImportController;
 use App\Http\Controllers\Api\V1\TaskReorderController;
@@ -25,6 +26,9 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('workspaces', WorkspaceController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
 
         Route::prefix('workspaces/{workspace}')->middleware('workspace')->group(function () {
+
+            // Dashboard
+            Route::get('dashboard', [DashboardController::class, 'show'])->name('workspaces.dashboard');
 
             // Members
             Route::get('members', [WorkspaceMemberController::class, 'index'])->name('workspaces.members.index');
