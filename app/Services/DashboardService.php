@@ -7,12 +7,13 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
-    public function metrics(Workspace $workspace): array
+    public function metrics(Workspace $workspace, ?int $boardId = null): array
     {
         $tasksByStatus = DB::table('board_columns')
             ->join('boards', 'board_columns.board_id', '=', 'boards.id')
             ->leftJoin('tasks', 'tasks.board_column_id', '=', 'board_columns.id')
             ->where('boards.workspace_id', $workspace->id)
+            ->when($boardId, fn ($q) => $q->where('boards.id', $boardId))
             ->select(
                 'board_columns.id',
                 'board_columns.name',
@@ -33,6 +34,7 @@ class DashboardService
             ->join('boards', 'board_columns.board_id', '=', 'boards.id')
             ->join('task_status_logs', 'task_status_logs.board_column_id', '=', 'board_columns.id')
             ->where('boards.workspace_id', $workspace->id)
+            ->when($boardId, fn ($q) => $q->where('boards.id', $boardId))
             ->select(
                 'board_columns.id',
                 'board_columns.name',
