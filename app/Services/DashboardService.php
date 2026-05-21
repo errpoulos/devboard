@@ -15,14 +15,13 @@ class DashboardService
             ->where('boards.workspace_id', $workspace->id)
             ->when($boardId, fn ($q) => $q->where('boards.id', $boardId))
             ->select(
-                'board_columns.id',
                 'board_columns.name',
-                'board_columns.color',
-                'board_columns.position',
+                DB::raw('MIN(board_columns.color) as color'),
+                DB::raw('MIN(board_columns.position) as position'),
                 DB::raw('COUNT(tasks.id) as count'),
             )
-            ->groupBy('board_columns.id', 'board_columns.name', 'board_columns.color', 'board_columns.position')
-            ->orderBy('board_columns.position')
+            ->groupBy('board_columns.name')
+            ->orderBy(DB::raw('MIN(board_columns.position)'))
             ->get()
             ->map(fn ($row) => [
                 'column' => $row->name,
@@ -36,14 +35,13 @@ class DashboardService
             ->where('boards.workspace_id', $workspace->id)
             ->when($boardId, fn ($q) => $q->where('boards.id', $boardId))
             ->select(
-                'board_columns.id',
                 'board_columns.name',
-                'board_columns.color',
-                'board_columns.position',
+                DB::raw('MIN(board_columns.color) as color'),
+                DB::raw('MIN(board_columns.position) as position'),
                 DB::raw('AVG(TIMESTAMPDIFF(SECOND, task_status_logs.entered_at, COALESCE(task_status_logs.exited_at, NOW()))) / 3600 as avg_hours'),
             )
-            ->groupBy('board_columns.id', 'board_columns.name', 'board_columns.color', 'board_columns.position')
-            ->orderBy('board_columns.position')
+            ->groupBy('board_columns.name')
+            ->orderBy(DB::raw('MIN(board_columns.position)'))
             ->get()
             ->map(fn ($row) => [
                 'column' => $row->name,
