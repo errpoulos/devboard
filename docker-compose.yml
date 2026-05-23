@@ -167,7 +167,7 @@ services:
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     ports:
-      - '8003:80'
+      - '${ADMIN_PORT:-8003}:80'
     environment:
       WWWUSER: '${WWWUSER:-1000}'
       LARAVEL_SAIL: 1
