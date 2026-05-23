@@ -3,6 +3,10 @@
 .env
 frontend/node_modules
 frontend/dist
+apps/*/frontend/node_modules
+apps/*/frontend/dist
+apps/*/frontend/tsconfig.tsbuildinfo
+apps/*/vendor
 .env.backup
 .env.production
 .phpactor.json
