@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react'
 import { useParams, Link } from 'react-router'
 import { ArrowLeft, Send } from 'lucide-react'
 import { useForm } from 'react-hook-form'
@@ -50,6 +51,13 @@ export default function TicketDetailPage() {
   const { data: repliesData } = useReplies(ticketId)
   const updateTicket = useUpdateTicket()
   const createReply = useCreateReply(ticketId)
+  const repliesBottomRef = useRef<HTMLDivElement>(null)
+
+  const replies = repliesData?.data ?? []
+
+  useEffect(() => {
+    repliesBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [replies.length])
 
   const {
     register,
@@ -88,7 +96,6 @@ export default function TicketDetailPage() {
   }
 
   const ticket = ticketData.data
-  const replies = repliesData?.data ?? []
 
   return (
     <div className="min-h-screen bg-pitch-black text-porcelain">
@@ -183,6 +190,7 @@ export default function TicketDetailPage() {
                 </p>
               </div>
             ))}
+            <div ref={repliesBottomRef} />
           </div>
         )}
 
