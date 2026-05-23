@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Board;
 use App\Models\BoardColumn;
+use App\Models\Organization;
 use App\Models\Task;
 use App\Models\TaskStatusLog;
 use App\Models\User;
@@ -17,17 +18,34 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        // Super-admin (no org)
+        User::factory()->create([
+            'name' => 'Super Admin',
+            'email' => 'superadmin@platform.test',
+            'is_super_admin' => true,
+        ]);
+
+        // Acme Corp org
+        $org = Organization::create([
+            'name' => 'Acme Corp',
+            'slug' => 'acme-corp',
+            'plan' => 'pro',
+            'status' => 'active',
+        ]);
+
         $admin = User::factory()->create([
             'name' => 'Admin User',
             'email' => 'admin@devboard.test',
+            'organization_id' => $org->id,
         ]);
 
-        $members = User::factory(4)->create();
+        $members = User::factory(4)->create(['organization_id' => $org->id]);
 
         $workspace = Workspace::create([
             'name' => 'Dev Team',
             'slug' => 'dev-team',
             'owner_id' => $admin->id,
+            'organization_id' => $org->id,
         ]);
 
         $workspace->members()->attach($admin->id, ['role' => 'owner']);
