@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useDeleteOrg, useOrgs, useUpdateOrg } from '@/features/admin/hooks/useAdmin'
+import { TableRowSkeleton } from '@/components/Skeleton'
 import type { Organization } from '@/types'
 
 const PLAN_OPTIONS = ['free', 'pro', 'enterprise'] as const
@@ -289,8 +290,14 @@ export default function OrgsPage() {
         }}
       >
         {isLoading ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-            Loading organizations...
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <TableRowSkeleton key={i} cols={6} />
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : isError ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: '#f87171' }}>

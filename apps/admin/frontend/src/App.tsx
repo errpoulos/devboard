@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/authStore'
 import LoginPage from '@/pages/LoginPage'
 import OrgsPage from '@/pages/OrgsPage'
 import OrgDetailPage from '@/pages/OrgDetailPage'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import api from '@/api/axios'
 
 const queryClient = new QueryClient({
@@ -136,7 +137,8 @@ function AppLayout() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -154,6 +156,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/orgs" replace />} />
         </Routes>
       </BrowserRouter>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   )
 }

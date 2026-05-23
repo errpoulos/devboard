@@ -152,7 +152,22 @@ export default function ContactsPage() {
       )}
 
       {isLoading ? (
-        <div className="text-[13px] text-storm-cloud">Loading contacts...</div>
+        <div className="rounded-md border border-gunmetal overflow-hidden">
+          <table className="w-full">
+            <tbody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} className="border-b border-[#23252a]">
+                  {[3, 4, 2, 3].map((w, j) => (
+                    <td key={j} className="px-4 py-3">
+                      <div className={`h-4 w-${w}/5 animate-pulse rounded bg-[#23252a]`} />
+                    </td>
+                  ))}
+                  <td className="px-4 py-3"><div className="h-4 w-8 animate-pulse rounded bg-[#23252a]" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : contacts && contacts.length > 0 ? (
         <div className="rounded-md border border-gunmetal overflow-hidden">
           <table className="w-full">

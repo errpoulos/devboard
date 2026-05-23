@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react'
 import { useTickets } from '@/features/tickets/hooks/useTickets'
 import PriorityBadge from '@/features/tickets/components/PriorityBadge'
 import TicketStatusBadge from '@/features/tickets/components/TicketStatusBadge'
+import { TableRowSkeleton } from '@/components/Skeleton'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -29,20 +30,23 @@ export default function TicketsPage() {
           </Link>
         </div>
 
-        {isLoading && (
-          <div className="text-storm-cloud text-[13px]">Loading tickets…</div>
-        )}
-
         {isError && (
-          <div className="text-warning-red text-[13px]">Failed to load tickets.</div>
+          <div className="text-warning-red text-[13px]">Failed to load tickets. Try refreshing.</div>
         )}
 
-        {data && (
-          <div
-            className="rounded-md overflow-hidden"
-            style={{ background: '#0f1011', boxShadow: 'rgba(0,0,0,0.4) 0px 2px 4px 0px' }}
-          >
-            {data.data.length === 0 ? (
+        <div
+          className="rounded-md overflow-hidden"
+          style={{ background: '#0f1011', boxShadow: 'rgba(0,0,0,0.4) 0px 2px 4px 0px' }}
+        >
+          {isLoading ? (
+            <table className="w-full">
+              <tbody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <TableRowSkeleton key={i} cols={5} />
+                ))}
+              </tbody>
+            </table>
+          ) : data && data.data.length === 0 ? (
               <div className="p-8 text-center text-storm-cloud text-[13px]">
                 No tickets yet.{' '}
                 <Link to="/tickets/new" className="text-aether-blue hover:underline">
@@ -107,8 +111,7 @@ export default function TicketsPage() {
                 </tbody>
               </table>
             )}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   )

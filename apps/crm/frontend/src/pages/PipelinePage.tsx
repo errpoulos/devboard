@@ -161,7 +161,28 @@ export default function PipelinePage() {
   )
 
   if (isLoading) {
-    return <div className="text-[13px] text-[#8a8f98]">Loading pipeline…</div>
+    return (
+      <div>
+        <h1 className="text-[18px] font-[590] text-[#f7f8f8] tracking-[-0.2px] mb-6">Pipeline</h1>
+        <div className="flex gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="w-64 shrink-0">
+              <div className="flex items-center justify-between mb-2 px-1">
+                <div className="h-4 w-24 animate-pulse rounded bg-[#23252a]" />
+              </div>
+              <div className="space-y-2">
+                {Array.from({ length: 3 }).map((_, j) => (
+                  <div key={j} className="bg-[#0f1011] border border-[#23252a] rounded p-2.5 space-y-2">
+                    <div className="h-4 w-full animate-pulse rounded bg-[#23252a]" />
+                    <div className="h-3 w-2/3 animate-pulse rounded bg-[#23252a]" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   if (!stages?.length) {
