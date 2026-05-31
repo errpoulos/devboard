@@ -14,9 +14,9 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     proxy: {
-      '/api': 'http://app:80',
-      '/sanctum': 'http://app:80',
-      '/broadcasting': 'http://app:80',
+      '/api': 'http://laravel.test:80',
+      '/sanctum': 'http://laravel.test:80',
+      '/broadcasting': 'http://laravel.test:80',
     },
   },
   test: {

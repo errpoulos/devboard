@@ -11,6 +11,8 @@ readonly class UpdateTicketDTO
         public ?string $description,
         public ?string $status,
         public ?string $priority,
+        public ?string $type,
+        public ?int $assignedTo,
         public array $keys,
     ) {}
 
@@ -23,6 +25,8 @@ readonly class UpdateTicketDTO
             description: $validated['description'] ?? null,
             status: $validated['status'] ?? null,
             priority: $validated['priority'] ?? null,
+            type: $validated['type'] ?? null,
+            assignedTo: isset($validated['assigned_to']) ? (int) $validated['assigned_to'] : null,
             keys: array_keys($validated),
         );
     }

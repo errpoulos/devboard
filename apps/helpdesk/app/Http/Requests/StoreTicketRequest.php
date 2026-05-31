@@ -17,6 +17,9 @@ class StoreTicketRequest extends FormRequest
             'subject' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'priority' => ['sometimes', 'string', 'in:low,medium,high,urgent'],
+            'type' => ['sometimes', 'string', 'in:support_request,bug_report,feature_request'],
+            'assigned_to' => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
+            'organization_id' => ['sometimes', 'nullable', 'integer', 'exists:organizations,id'],
         ];
     }
 }

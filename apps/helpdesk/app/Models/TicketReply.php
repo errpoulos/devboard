@@ -13,6 +13,7 @@ class TicketReply extends Model
         'ticket_id',
         'user_id',
         'body',
+        'is_private',
     ];
 
     protected function casts(): array
@@ -20,6 +21,7 @@ class TicketReply extends Model
         return [
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
+            'is_private' => 'boolean',
         ];
     }
 

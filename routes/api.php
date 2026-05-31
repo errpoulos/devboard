@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AdminController;
+use App\Http\Controllers\Api\V1\AttachmentController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BoardColumnController;
 use App\Http\Controllers\Api\V1\BoardController;
@@ -21,6 +23,12 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
         Route::get('auth/me', [AuthController::class, 'me'])->name('auth.me');
+
+        // Admin — user management
+        Route::get('admin/users', [AdminController::class, 'index']);
+        Route::post('admin/users', [AdminController::class, 'store']);
+        Route::patch('admin/users/{user}', [AdminController::class, 'update']);
+        Route::delete('admin/users/{user}', [AdminController::class, 'destroy']);
 
         // Workspaces
         Route::apiResource('workspaces', WorkspaceController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
@@ -51,11 +59,16 @@ Route::prefix('v1')->group(function () {
                 Route::apiResource('tasks', TaskController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
                 Route::post('tasks/reorder', TaskReorderController::class)->name('tasks.reorder');
 
-                // Comments
+                // Comments & Attachments
                 Route::prefix('tasks/{task}')->group(function () {
                     Route::get('comments', [CommentController::class, 'index'])->name('tasks.comments.index');
                     Route::post('comments', [CommentController::class, 'store'])->name('tasks.comments.store');
                     Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->name('tasks.comments.destroy');
+
+                    Route::get('attachments', [AttachmentController::class, 'index'])->name('tasks.attachments.index');
+                    Route::post('attachments', [AttachmentController::class, 'store'])->name('tasks.attachments.store');
+                    Route::get('attachments/{attachment}/download', [AttachmentController::class, 'download'])->name('tasks.attachments.download');
+                    Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('tasks.attachments.destroy');
                 });
             });
         });

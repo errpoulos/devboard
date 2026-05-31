@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import axios from 'axios'
 import api from '@/api/axios'
 import { useAuthStore } from '@/store/authStore'
@@ -104,6 +104,12 @@ export default function LoginPage() {
               </button>
             </div>
           </form>
+          <p className="mt-6 text-center text-[12px] text-storm-cloud">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-aether-blue hover:underline">
+              Create one
+            </Link>
+          </p>
         </div>
       </div>
     </div>

@@ -30,6 +30,10 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
+        if ($user->isCustomer()) {
+            $user->load('organizations');
+        }
+
         return new UserResource($user);
     }
 
@@ -45,6 +49,11 @@ class AuthController extends Controller
 
     public function me(Request $request): UserResource
     {
-        return new UserResource($request->user());
+        $user = $request->user();
+        if ($user->isCustomer()) {
+            $user->load('organizations');
+        }
+
+        return new UserResource($user);
     }
 }

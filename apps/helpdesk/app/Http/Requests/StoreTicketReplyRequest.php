@@ -15,6 +15,7 @@ class StoreTicketReplyRequest extends FormRequest
     {
         return [
             'body' => ['required', 'string'],
+            'is_private' => ['sometimes', 'boolean'],
         ];
     }
 }

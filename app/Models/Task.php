@@ -24,6 +24,7 @@ class Task extends Model
         'due_at',
         'completed_at',
         'story_points',
+        'helpdesk_ticket_id',
     ];
 
     protected function casts(): array

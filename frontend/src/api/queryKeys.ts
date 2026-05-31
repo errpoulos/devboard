@@ -10,6 +10,7 @@ export const queryKeys = {
   task: (workspaceId: number, boardId: number, taskId: number) =>
     ['workspaces', workspaceId, 'boards', boardId, 'tasks', taskId] as const,
   comments: (taskId: number) => ['tasks', taskId, 'comments'] as const,
+  attachments: (taskId: number) => ['tasks', taskId, 'attachments'] as const,
   members: (workspaceId: number) => ['workspaces', workspaceId, 'members'] as const,
   dashboard: (workspaceId: number, boardId?: number | null) =>
     ['workspaces', workspaceId, 'dashboard', boardId ?? 'all'] as const,

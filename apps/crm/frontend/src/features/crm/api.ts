@@ -1,5 +1,5 @@
 import api from '@/api/axios'
-import type { Company, Contact, Deal, PipelineStage, User } from '@/types'
+import type { ClientNote, Company, Contact, Deal, PipelineStage, User } from '@/types'
 
 // Auth
 export async function fetchCsrf(): Promise<void> {
@@ -102,4 +102,35 @@ export async function updateDeal(
 
 export async function deleteDeal(id: number): Promise<void> {
   await api.delete(`/deals/${id}`)
+}
+
+// Contact notes
+export async function fetchContactNotes(contactId: number): Promise<ClientNote[]> {
+  const res = await api.get<{ data: ClientNote[] }>(`/contacts/${contactId}/notes`)
+  return res.data.data
+}
+
+export async function createContactNote(contactId: number, body: string): Promise<ClientNote> {
+  const res = await api.post<{ data: ClientNote }>(`/contacts/${contactId}/notes`, { body })
+  return res.data.data
+}
+
+// Company notes
+export async function fetchCompanyNotes(companyId: number): Promise<ClientNote[]> {
+  const res = await api.get<{ data: ClientNote[] }>(`/companies/${companyId}/notes`)
+  return res.data.data
+}
+
+export async function createCompanyNote(companyId: number, body: string): Promise<ClientNote> {
+  const res = await api.post<{ data: ClientNote }>(`/companies/${companyId}/notes`, { body })
+  return res.data.data
+}
+
+export async function updateNote(noteId: number, body: string): Promise<ClientNote> {
+  const res = await api.patch<{ data: ClientNote }>(`/notes/${noteId}`, { body })
+  return res.data.data
+}
+
+export async function deleteNote(noteId: number): Promise<void> {
+  await api.delete(`/notes/${noteId}`)
 }

@@ -18,6 +18,8 @@ class UpdateTicketRequest extends FormRequest
             'description' => ['sometimes', 'string'],
             'status' => ['sometimes', 'string', 'in:open,in_progress,resolved,closed'],
             'priority' => ['sometimes', 'string', 'in:low,medium,high,urgent'],
+            'type' => ['sometimes', 'string', 'in:support_request,bug_report,feature_request'],
+            'assigned_to' => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
         ];
     }
 }

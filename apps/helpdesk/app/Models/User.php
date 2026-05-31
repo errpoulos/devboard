@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'password',
         'organization_id',
         'is_super_admin',
+        'role',
     ];
 
     protected $hidden = [
@@ -37,9 +39,29 @@ class User extends Authenticatable
         ];
     }
 
+    public function isAdmin(): bool
+    {
+        return $this->role === 'administrator';
+    }
+
+    public function isAgent(): bool
+    {
+        return in_array($this->role, ['agent', 'administrator']);
+    }
+
+    public function isCustomer(): bool
+    {
+        return ! $this->isAgent();
+    }
+
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    public function organizations(): BelongsToMany
+    {
+        return $this->belongsToMany(Organization::class, 'organization_user');
     }
 
     public function tickets(): HasMany

@@ -18,7 +18,13 @@ class TicketReplyController extends Controller
     {
         $this->authorize('view', $ticket);
 
-        $replies = $ticket->replies()->with('user')->latest()->get();
+        $query = $ticket->replies()->with('user');
+
+        if (auth()->user()->isCustomer()) {
+            $query->where('is_private', false);
+        }
+
+        $replies = $query->latest()->get();
 
         return TicketReplyResource::collection($replies);
     }

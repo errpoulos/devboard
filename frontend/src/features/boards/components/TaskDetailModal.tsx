@@ -1,7 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
+import { Paperclip, X, Download } from 'lucide-react'
 import type { BoardColumn, Task } from '@/types'
-import { useUpdateTask, useDeleteTask } from '@/features/tasks/hooks/useTasks'
+import {
+  useDeleteTaskAttachment,
+  useDeleteTask,
+  useTaskAttachments,
+  useUpdateTask,
+  useUploadTaskAttachment,
+} from '@/features/tasks/hooks/useTasks'
 import { cn } from '@/lib/utils'
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+}
 
 const PRIORITIES = ['low', 'medium', 'high', 'urgent'] as const
 
@@ -28,6 +41,18 @@ interface Props {
 export default function TaskDetailModal({ task, columns, workspaceId, boardId, onClose }: Props) {
   const updateTask = useUpdateTask(workspaceId, boardId)
   const deleteTask = useDeleteTask(workspaceId, boardId)
+  const { data: attachmentsData } = useTaskAttachments(workspaceId, boardId, task.id)
+  const uploadAttachment = useUploadTaskAttachment(workspaceId, boardId, task.id)
+  const removeAttachment = useDeleteTaskAttachment(workspaceId, boardId, task.id)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [attachDragOver, setAttachDragOver] = useState(false)
+
+  const attachments = attachmentsData ?? []
+
+  function handleFiles(files: FileList | null) {
+    if (!files) return
+    Array.from(files).forEach((f) => uploadAttachment.mutate(f))
+  }
 
   const [title, setTitle] = useState(task.title)
   const [description, setDescription] = useState(task.description ?? '')
@@ -224,6 +249,77 @@ export default function TaskDetailModal({ task, columns, workspaceId, boardId, o
               <p className="text-[13px] text-light-steel tracking-[-0.13px]">{task.assignee.name}</p>
             </div>
           )}
+
+          {/* Helpdesk link */}
+          {task.helpdesk_ticket_id && (
+            <div>
+              <label className="block text-[11px] text-fog-grey tracking-[-0.1px] uppercase mb-1.5">
+                Helpdesk Ticket
+              </label>
+              <a
+                href={`${import.meta.env.VITE_HELPDESK_URL}/tickets/${task.helpdesk_ticket_id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-[12px] px-2 py-0.5 rounded font-[500] hover:opacity-80 transition-opacity"
+                style={{ background: '#1a2535', color: '#63b3ed' }}
+              >
+                HD #{task.helpdesk_ticket_id} ↗
+              </a>
+            </div>
+          )}
+
+          {/* Attachments */}
+          <div>
+            <label className="block text-[11px] text-fog-grey tracking-[-0.1px] uppercase mb-1.5">
+              Attachments
+            </label>
+
+            <div
+              className={cn(
+                'border border-dashed rounded-md px-3 py-2 text-center cursor-pointer transition-colors mb-2',
+                attachDragOver ? 'border-aether-blue bg-[#1a2535]' : 'border-charcoal-grey hover:border-muted-ash',
+              )}
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setAttachDragOver(true) }}
+              onDragLeave={() => setAttachDragOver(false)}
+              onDrop={(e) => { e.preventDefault(); setAttachDragOver(false); handleFiles(e.dataTransfer.files) }}
+            >
+              <Paperclip size={12} className="inline mr-1.5 text-fog-grey" />
+              <span className="text-[11px] text-fog-grey">
+                {uploadAttachment.isPending ? 'Uploading…' : 'Attach files'}
+              </span>
+              <input ref={fileInputRef} type="file" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
+            </div>
+
+            {attachments.length > 0 && (
+              <ul className="space-y-1">
+                {attachments.map((att) => (
+                  <li key={att.id} className="flex items-center justify-between rounded px-2.5 py-1.5 text-[11px]" style={{ background: '#0f1011', border: '1px solid #23252a' }}>
+                    <span className="text-storm-cloud truncate mr-2">{att.filename}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-fog-grey">{formatBytes(att.size)}</span>
+                      <a
+                        href={`/api/v1/workspaces/${workspaceId}/boards/${boardId}/tasks/${task.id}/attachments/${att.id}/download`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-fog-grey hover:text-aether-blue transition-colors"
+                        title="Download"
+                      >
+                        <Download size={11} />
+                      </a>
+                      <button
+                        onClick={() => removeAttachment.mutate(att.id)}
+                        className="text-fog-grey hover:text-warning-red transition-colors"
+                        title="Remove"
+                      >
+                        <X size={11} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         {/* Footer */}

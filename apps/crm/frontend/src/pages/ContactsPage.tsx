@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -16,6 +17,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>
 
 export default function ContactsPage() {
+  const navigate = useNavigate()
   const { data: contacts, isLoading } = useContacts()
   const { data: companies } = useCompanies()
   const { mutate: createContact, isPending: isCreating } = useCreateContact()
@@ -196,7 +198,12 @@ export default function ContactsPage() {
                   style={i % 2 === 0 ? { background: '#161718' } : { background: '#0f1011' }}
                 >
                   <td className="px-4 py-3 text-[13px] text-porcelain font-[500]">
-                    {contact.first_name} {contact.last_name}
+                    <button
+                      onClick={() => navigate(`/contacts/${contact.id}`)}
+                      className="hover:underline text-left"
+                    >
+                      {contact.first_name} {contact.last_name}
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-[13px] text-storm-cloud">
                     {contact.email ?? <span className="text-fog-grey">—</span>}

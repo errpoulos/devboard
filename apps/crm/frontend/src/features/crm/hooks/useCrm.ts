@@ -2,15 +2,21 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/api/queryKeys'
 import {
   createCompany,
+  createCompanyNote,
   createContact,
+  createContactNote,
   createDeal,
   deleteCompany,
   deleteContact,
   deleteDeal,
+  deleteNote,
   fetchCompanies,
+  fetchCompanyNotes,
+  fetchContactNotes,
   fetchContacts,
   fetchPipeline,
   updateDeal,
+  updateNote,
 } from '../api'
 
 // Companies
@@ -105,6 +111,63 @@ export function useDeleteDeal() {
     mutationFn: deleteDeal,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.pipeline() })
+    },
+  })
+}
+
+// Contact notes
+export function useContactNotes(contactId: number) {
+  return useQuery({
+    queryKey: queryKeys.contactNotes(contactId),
+    queryFn: () => fetchContactNotes(contactId),
+  })
+}
+
+export function useCreateContactNote(contactId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: string) => createContactNote(contactId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.contactNotes(contactId) })
+    },
+  })
+}
+
+// Company notes
+export function useCompanyNotes(companyId: number) {
+  return useQuery({
+    queryKey: queryKeys.companyNotes(companyId),
+    queryFn: () => fetchCompanyNotes(companyId),
+  })
+}
+
+export function useCreateCompanyNote(companyId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: string) => createCompanyNote(companyId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.companyNotes(companyId) })
+    },
+  })
+}
+
+// Shared note mutations
+export function useUpdateNote(invalidateKey: readonly unknown[]) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ noteId, body }: { noteId: number; body: string }) => updateNote(noteId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: invalidateKey as string[] })
+    },
+  })
+}
+
+export function useDeleteNote(invalidateKey: readonly unknown[]) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (noteId: number) => deleteNote(noteId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: invalidateKey as string[] })
     },
   })
 }

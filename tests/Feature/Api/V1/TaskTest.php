@@ -1,6 +1,8 @@
 <?php
 
 use App\Events\TaskCreated;
+use App\Events\TaskDeleted;
+use App\Events\TaskUpdated;
 use App\Models\Board;
 use App\Models\BoardColumn;
 use App\Models\Task;

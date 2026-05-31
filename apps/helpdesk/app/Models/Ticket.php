@@ -17,6 +17,9 @@ class Ticket extends Model
         'description',
         'status',
         'priority',
+        'type',
+        'assigned_to',
+        'devboard_task_id',
     ];
 
     protected function casts(): array
@@ -37,8 +40,18 @@ class Ticket extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
     public function replies(): HasMany
     {
         return $this->hasMany(TicketReply::class);
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(TicketAttachment::class);
     }
 }

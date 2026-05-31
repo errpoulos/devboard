@@ -5,7 +5,7 @@ use App\Models\User;
 return [
 
     'defaults' => [
-        'guard' => 'api',
+        'guard' => 'web',
         'passwords' => 'users',
     ],
 

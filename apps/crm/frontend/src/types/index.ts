@@ -36,4 +36,13 @@ export interface User {
   name: string
   email: string
   organization_id?: number
+  is_super_admin?: boolean
+}
+
+export interface ClientNote {
+  id: number
+  category: 'sales' | 'support'
+  body: string
+  created_at: string
+  author?: User
 }

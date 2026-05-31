@@ -20,11 +20,33 @@ class TicketController extends Controller
 
     public function index(Request $request): ResourceCollection
     {
-        $tickets = Ticket::with('user')
-            ->withCount('replies')
-            ->where('organization_id', $request->user()->organization_id)
-            ->latest()
-            ->paginate(25);
+        $user = $request->user();
+        $query = Ticket::with('user')->withCount('replies');
+
+        if ($user->isCustomer()) {
+            // Customers see only their own tickets
+            $query->where('user_id', $user->id);
+        } else {
+            $query->where('organization_id', $user->organization_id);
+        }
+
+        // Filters — comma-separated values supported for status/type/priority
+        $query->when($request->status, fn ($q) => $q->whereIn('status', explode(',', $request->status)));
+        $query->when($request->type, fn ($q) => $q->whereIn('type', explode(',', $request->type)));
+        $query->when($request->priority, fn ($q) => $q->whereIn('priority', explode(',', $request->priority)));
+        $query->when($request->date_from, fn ($q) => $q->whereDate('created_at', '>=', $request->date_from));
+        $query->when($request->date_to, fn ($q) => $q->whereDate('created_at', '<=', $request->date_to));
+        $query->when($request->search, fn ($q) => $q->where('subject', 'like', '%' . $request->search . '%'));
+
+        if ($request->user()->isAgent() && $request->filled('assigned_to')) {
+            if ($request->assigned_to === 'unassigned' || $request->assigned_to === '0') {
+                $query->whereNull('assigned_to');
+            } else {
+                $query->where('assigned_to', $request->assigned_to);
+            }
+        }
+
+        $tickets = $query->latest()->paginate(25);
 
         return TicketResource::collection($tickets);
     }

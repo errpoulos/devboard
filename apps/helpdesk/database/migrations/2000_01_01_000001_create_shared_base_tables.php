@@ -29,7 +29,30 @@ return new class extends Migration
                 $table->string('email')->unique();
                 $table->string('password');
                 $table->boolean('is_super_admin')->default(false);
+                $table->string('role')->nullable()->after('is_super_admin');
                 $table->rememberToken();
+                $table->timestamps();
+            });
+        }
+
+        if (! Schema::hasTable('client_notes')) {
+            Schema::create('client_notes', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('organization_id')->nullable();
+                $table->unsignedBigInteger('subject_user_id')->nullable();
+                $table->unsignedBigInteger('author_id');
+                $table->enum('category', ['sales', 'support'])->default('support');
+                $table->text('body');
+                $table->timestamps();
+            });
+        }
+
+        if (! Schema::hasTable('organization_user')) {
+            Schema::create('organization_user', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('organization_id');
+                $table->unsignedBigInteger('user_id');
+                $table->unique(['organization_id', 'user_id']);
                 $table->timestamps();
             });
         }

@@ -12,7 +12,7 @@ class Workspace extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'slug', 'owner_id', 'organization_id'];
+    protected $fillable = ['name', 'slug', 'owner_id', 'organization_id', 'is_default'];
 
     public function organization(): BelongsTo
     {

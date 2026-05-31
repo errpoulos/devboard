@@ -6,7 +6,12 @@ frontend/dist
 apps/*/frontend/node_modules
 apps/*/frontend/dist
 apps/*/frontend/tsconfig.tsbuildinfo
+frontend/tsconfig.tsbuildinfo
 apps/*/vendor
+apps/*/storage/framework/sessions/
+apps/*/storage/framework/views/
+apps/*/storage/framework/cache/
+apps/*/.env.bindtest
 .env.backup
 .env.production
 .phpactor.json

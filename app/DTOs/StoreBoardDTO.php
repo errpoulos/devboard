@@ -9,7 +9,8 @@ readonly class StoreBoardDTO
     public function __construct(
         public string $name,
         public ?string $description,
-    ) {}
+    ) {
+    }
 
     public static function fromRequest(StoreBoardRequest $request): self
     {

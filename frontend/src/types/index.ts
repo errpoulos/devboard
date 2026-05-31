@@ -2,6 +2,7 @@ export interface User {
   id: number
   name: string
   email: string
+  is_super_admin?: boolean
   created_at: string
 }
 
@@ -32,6 +33,15 @@ export interface Board {
   created_at: string
 }
 
+export interface Attachment {
+  id: number
+  filename: string
+  mime_type: string
+  size: number
+  created_at: string
+  uploader?: User
+}
+
 export interface Task {
   id: number
   workspace_id: number
@@ -43,9 +53,11 @@ export interface Task {
   position: number
   due_at: string | null
   completed_at: string | null
+  helpdesk_ticket_id?: number | null
   assignee?: User
   comments_count?: number
   attachments_count?: number
+  attachments?: Attachment[]
   created_at: string
   updated_at: string
 }

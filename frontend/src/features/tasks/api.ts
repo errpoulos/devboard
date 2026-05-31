@@ -1,5 +1,5 @@
 import api from '@/api/axios'
-import type { ApiResource, Comment, Task } from '@/types'
+import type { ApiResource, Attachment, Comment, Task } from '@/types'
 
 type CreateTaskPayload = {
   title: string
@@ -80,4 +80,42 @@ export async function createComment(
     { body },
   )
   return res.data.data
+}
+
+export async function getAttachments(
+  workspaceId: number,
+  boardId: number,
+  taskId: number,
+): Promise<Attachment[]> {
+  const res = await api.get<{ data: Attachment[] }>(
+    `/workspaces/${workspaceId}/boards/${boardId}/tasks/${taskId}/attachments`,
+  )
+  return res.data.data
+}
+
+export async function uploadAttachment(
+  workspaceId: number,
+  boardId: number,
+  taskId: number,
+  file: File,
+): Promise<Attachment> {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await api.post<ApiResource<Attachment>>(
+    `/workspaces/${workspaceId}/boards/${boardId}/tasks/${taskId}/attachments`,
+    form,
+    { headers: { 'Content-Type': 'multipart/form-data' } },
+  )
+  return res.data.data
+}
+
+export async function deleteAttachment(
+  workspaceId: number,
+  boardId: number,
+  taskId: number,
+  attachmentId: number,
+): Promise<void> {
+  await api.delete(
+    `/workspaces/${workspaceId}/boards/${boardId}/tasks/${taskId}/attachments/${attachmentId}`,
+  )
 }

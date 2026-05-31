@@ -2,8 +2,11 @@ import { Routes, Route, Navigate } from 'react-router'
 import { useAuthStore } from '@/store/authStore'
 import LoginPage from '@/pages/LoginPage'
 import ContactsPage from '@/pages/ContactsPage'
+import ContactDetailPage from '@/pages/ContactDetailPage'
 import CompaniesPage from '@/pages/CompaniesPage'
+import CompanyDetailPage from '@/pages/CompanyDetailPage'
 import PipelinePage from '@/pages/PipelinePage'
+import SettingsPage from '@/pages/SettingsPage'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user)
@@ -21,6 +24,7 @@ function Layout({ children }: { children: React.ReactNode }) {
         <NavItem href="/contacts" label="Contacts" />
         <NavItem href="/companies" label="Companies" />
         <NavItem href="/pipeline" label="Pipeline" />
+        {user?.is_super_admin && <NavItem href="/settings" label="Settings" />}
         <div className="mt-auto pt-4 border-t border-[#23252a]">
           <p className="text-[12px] text-[#8a8f98] px-2 truncate">{user?.email}</p>
           <button
@@ -60,8 +64,11 @@ export default function App() {
               <Routes>
                 <Route index element={<Navigate to="/contacts" replace />} />
                 <Route path="contacts" element={<ContactsPage />} />
+                <Route path="contacts/:id" element={<ContactDetailPage />} />
                 <Route path="companies" element={<CompaniesPage />} />
+                <Route path="companies/:id" element={<CompanyDetailPage />} />
                 <Route path="pipeline" element={<PipelinePage />} />
+                <Route path="settings" element={<SettingsPage />} />
               </Routes>
             </Layout>
           </RequireAuth>

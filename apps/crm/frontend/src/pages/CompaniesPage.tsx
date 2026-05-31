@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -14,6 +15,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>
 
 export default function CompaniesPage() {
+  const navigate = useNavigate()
   const { data: companies, isLoading } = useCompanies()
   const { mutate: createCompany, isPending: isCreating } = useCreateCompany()
   const { mutate: deleteCompany } = useDeleteCompany()
@@ -154,7 +156,14 @@ export default function CompaniesPage() {
                   className="border-b border-gunmetal last:border-0 hover:bg-deep-slate transition-colors"
                   style={i % 2 === 0 ? { background: '#161718' } : { background: '#0f1011' }}
                 >
-                  <td className="px-4 py-3 text-[13px] text-porcelain font-[500]">{company.name}</td>
+                  <td className="px-4 py-3 text-[13px] text-porcelain font-[500]">
+                    <button
+                      onClick={() => navigate(`/companies/${company.id}`)}
+                      className="hover:underline text-left"
+                    >
+                      {company.name}
+                    </button>
+                  </td>
                   <td className="px-4 py-3 text-[13px] text-storm-cloud">
                     {company.domain ?? <span className="text-fog-grey">—</span>}
                   </td>

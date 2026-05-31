@@ -5,6 +5,7 @@ import WorkspacesPage from '@/pages/WorkspacesPage'
 import BoardPage from '@/pages/BoardPage'
 import ImportPage from '@/pages/ImportPage'
 import DashboardPage from '@/pages/DashboardPage'
+import SettingsPage from '@/pages/SettingsPage'
 import DashboardLayout from '@/components/DashboardLayout'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="workspaces/:workspaceId/boards/:boardId" element={<BoardPage />} />
         <Route path="import" element={<ImportPage />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
     </Routes>
   )

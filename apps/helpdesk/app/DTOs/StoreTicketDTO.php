@@ -10,6 +10,8 @@ readonly class StoreTicketDTO
         public string $subject,
         public string $description,
         public string $priority,
+        public string $type = 'support_request',
+        public ?int $organizationId = null,
     ) {}
 
     public static function fromRequest(StoreTicketRequest $request): self
@@ -18,6 +20,8 @@ readonly class StoreTicketDTO
             subject: $request->validated('subject'),
             description: $request->validated('description'),
             priority: $request->validated('priority', 'medium'),
+            type: $request->validated('type', 'support_request'),
+            organizationId: $request->validated('organization_id'),
         );
     }
 }

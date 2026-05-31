@@ -12,6 +12,7 @@ class TicketReplyResource extends JsonResource
         return [
             'id' => $this->id,
             'body' => $this->body,
+            'is_private' => $this->when(auth()->user()?->isAgent(), $this->is_private),
             'created_at' => $this->created_at?->toISOString(),
             'user' => $this->whenLoaded('user', fn () => new UserResource($this->user)),
         ];

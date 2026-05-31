@@ -88,6 +88,20 @@ export default function TaskCard({ task, onClick }: TaskCardProps) {
           </span>
         )}
 
+        {task.helpdesk_ticket_id && (
+          <a
+            href={`${import.meta.env.VITE_HELPDESK_URL}/tickets/${task.helpdesk_ticket_id}`}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="text-[10px] px-1.5 py-0.5 rounded font-[510] tracking-[-0.1px] hover:opacity-80 transition-opacity"
+            style={{ background: '#1a2535', color: '#63b3ed', borderRadius: '4px' }}
+            title={`Open helpdesk ticket #${task.helpdesk_ticket_id}`}
+          >
+            HD #{task.helpdesk_ticket_id}
+          </a>
+        )}
+
         {!task.due_at && task.assignee && (
           <span className="text-[11px] text-fog-grey ml-auto tracking-[-0.1px]">
             {task.assignee.name}
