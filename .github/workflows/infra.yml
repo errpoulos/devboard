@@ -1,0 +1,95 @@
+name: Terraform
+
+on:
+  push:
+    branches: [main]
+    paths: ['infra/**']
+  pull_request:
+    branches: [main]
+    paths: ['infra/**']
+
+permissions:
+  id-token: write       # required for OIDC token exchange
+  contents: read
+  pull-requests: write  # required to post plan comments on PRs
+
+env:
+  AWS_REGION: us-east-1
+  TF_WORKING_DIR: infra
+
+jobs:
+  terraform:
+    name: Terraform ${{ github.event_name == 'pull_request' && 'Plan' || 'Apply' }}
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{ env.TF_WORKING_DIR }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '~1.5'
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan \
+            -no-color \
+            -input=false \
+            -var="db_password=${{ secrets.DB_PASSWORD }}" \
+            -var="domain=${{ secrets.DOMAIN }}" \
+            -var="ecs_ami_id=${{ secrets.ECS_AMI_ID }}" \
+            -var="key_pair_name=${{ secrets.KEY_PAIR_NAME }}"
+        continue-on-error: true
+
+      - name: Comment plan on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const plan = `${{ steps.plan.outputs.stdout }}`;
+            const status = '${{ steps.plan.outcome }}';
+            const emoji = status === 'success' ? '✅' : '❌';
+            const body = `## Terraform Plan ${emoji}\n\n<details><summary>Show Plan</summary>\n\n\`\`\`terraform\n${plan}\n\`\`\`\n</details>`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body,
+            });
+
+      - name: Fail if plan failed
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          terraform apply \
+            -auto-approve \
+            -input=false \
+            -var="db_password=${{ secrets.DB_PASSWORD }}" \
+            -var="domain=${{ secrets.DOMAIN }}" \
+            -var="ecs_ami_id=${{ secrets.ECS_AMI_ID }}" \
+            -var="key_pair_name=${{ secrets.KEY_PAIR_NAME }}"

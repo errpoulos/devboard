@@ -1,0 +1,221 @@
+name: Deploy
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  id-token: write   # required for OIDC token exchange
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ECS_CLUSTER: devboard-prod
+
+jobs:
+  # --------------------------------------------------------------------------
+  # Build and push Docker images for all 4 Laravel apps to ECR
+  # --------------------------------------------------------------------------
+  build-images:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app:
+          - name: devboard
+            context: .
+            dockerfile: Dockerfile
+          - name: helpdesk
+            context: apps/helpdesk
+            dockerfile: apps/helpdesk/Dockerfile
+          - name: crm
+            context: apps/crm
+            dockerfile: apps/crm/Dockerfile
+          - name: admin
+            context: apps/admin
+            dockerfile: apps/admin/Dockerfile
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push ${{ matrix.app.name }}
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.ref_name }}
+        run: |
+          docker build \
+            -f ${{ matrix.app.dockerfile }} \
+            --cache-from $ECR_REGISTRY/devboard-prod/${{ matrix.app.name }}:latest \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            -t $ECR_REGISTRY/devboard-prod/${{ matrix.app.name }}:$IMAGE_TAG \
+            -t $ECR_REGISTRY/devboard-prod/${{ matrix.app.name }}:latest \
+            ${{ matrix.app.context }}
+          docker push $ECR_REGISTRY/devboard-prod/${{ matrix.app.name }}:$IMAGE_TAG
+          docker push $ECR_REGISTRY/devboard-prod/${{ matrix.app.name }}:latest
+
+  # --------------------------------------------------------------------------
+  # Build React SPAs and sync to S3, then invalidate CloudFront
+  # --------------------------------------------------------------------------
+  build-spas:
+    name: Build & Deploy SPAs
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app:
+          - name: devboard
+            dir: frontend
+            s3_secret: S3_SPA_DEVBOARD
+            cf_secret: CF_DIST_DEVBOARD
+            api_url_secret: VITE_API_URL_DEVBOARD
+          - name: helpdesk
+            dir: apps/helpdesk/frontend
+            s3_secret: S3_SPA_HELPDESK
+            cf_secret: CF_DIST_HELPDESK
+            api_url_secret: VITE_API_URL_HELPDESK
+          - name: crm
+            dir: apps/crm/frontend
+            s3_secret: S3_SPA_CRM
+            cf_secret: CF_DIST_CRM
+            api_url_secret: VITE_API_URL_CRM
+          - name: admin
+            dir: apps/admin/frontend
+            s3_secret: S3_SPA_ADMIN
+            cf_secret: CF_DIST_ADMIN
+            api_url_secret: VITE_API_URL_ADMIN
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: ${{ matrix.app.dir }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.app.dir }}
+        run: npm ci
+
+      - name: Build SPA
+        working-directory: ${{ matrix.app.dir }}
+        env:
+          VITE_API_BASE_URL: ${{ secrets[matrix.app.api_url_secret] }}
+          VITE_REVERB_APP_KEY: ${{ secrets.VITE_REVERB_APP_KEY }}
+          VITE_REVERB_HOST: ${{ secrets.VITE_REVERB_HOST }}
+          VITE_REVERB_PORT: '443'
+          VITE_REVERB_SCHEME: 'https'
+          VITE_HELPDESK_URL: ${{ secrets.VITE_HELPDESK_URL }}
+        run: npm run build
+
+      - name: Sync hashed assets to S3 (long cache)
+        working-directory: ${{ matrix.app.dir }}
+        run: |
+          aws s3 sync dist/ s3://${{ secrets[matrix.app.s3_secret] }} \
+            --delete \
+            --cache-control "public,max-age=31536000,immutable" \
+            --exclude "index.html"
+
+      - name: Upload index.html to S3 (no cache)
+        working-directory: ${{ matrix.app.dir }}
+        run: |
+          aws s3 cp dist/index.html s3://${{ secrets[matrix.app.s3_secret] }}/index.html \
+            --cache-control "no-cache,no-store,must-revalidate"
+
+      - name: Invalidate CloudFront distribution
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets[matrix.app.cf_secret] }} \
+            --paths "/*"
+
+  # --------------------------------------------------------------------------
+  # Run migrations then force-redeploy all ECS services
+  # --------------------------------------------------------------------------
+  deploy:
+    name: Deploy to ECS
+    runs-on: ubuntu-latest
+    needs: [build-images, build-spas]
+
+    steps:
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Run database migrations
+        run: |
+          TASK_ARN=$(aws ecs run-task \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --task-definition devboard-api \
+            --overrides '{"containerOverrides":[{"name":"app","command":["php","artisan","migrate","--force"]}]}' \
+            --capacity-provider-strategy '[{"capacityProvider":"devboard-ec2-prod","weight":1}]' \
+            --query 'tasks[0].taskArn' \
+            --output text)
+          echo "Migration task ARN: $TASK_ARN"
+          echo "Waiting for migration task to complete..."
+          aws ecs wait tasks-stopped \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --tasks "$TASK_ARN"
+          EXIT_CODE=$(aws ecs describe-tasks \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --tasks "$TASK_ARN" \
+            --query 'tasks[0].containers[0].exitCode' \
+            --output text)
+          echo "Migration exit code: $EXIT_CODE"
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "Migration failed with exit code $EXIT_CODE"
+            exit 1
+          fi
+          echo "Migrations completed successfully."
+
+      - name: Force redeploy all ECS services
+        run: |
+          SERVICES=(
+            devboard-api
+            devboard-horizon
+            devboard-reverb
+            helpdesk-api
+            helpdesk-horizon
+            crm-api
+            crm-horizon
+            admin-api
+            meilisearch
+          )
+          for SERVICE in "${SERVICES[@]}"; do
+            echo "Redeploying $SERVICE..."
+            aws ecs update-service \
+              --cluster ${{ env.ECS_CLUSTER }} \
+              --service "$SERVICE" \
+              --force-new-deployment \
+              --no-cli-pager
+          done
+
+      - name: Wait for API services to stabilize
+        run: |
+          echo "Waiting for API services to reach steady state..."
+          aws ecs wait services-stable \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services devboard-api helpdesk-api crm-api admin-api
+          echo "All API services are stable."
