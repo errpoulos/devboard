@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Admin User',
             'email' => 'admin@devboard.test',
             'organization_id' => $org->id,
+            'role' => 'agent',
         ]);
 
         $members = User::factory(4)->create(['organization_id' => $org->id]);
